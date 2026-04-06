@@ -14,3 +14,15 @@ services:
     image: migrate/migrate:v4.19.1
     volumes:
       - ${PROJECT_ROOT}/migrations:/migrations
+<<<<<<< HEAD
+=======
+  
+  happytail-api:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - happytail-postgres
+>>>>>>> 01b4513 (project structure, config, db connection, health endpoint)

@@ -30,9 +30,11 @@ func main() {
 
 	animalRepo := repository.NewAnimalRepository(pool)
 	animalHandler := handler.NewAnimalHandler(animalRepo)
-	http.HandleFunc("/animals", animalHandler.GetAllAnimals)
+	http.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 
-	http.HandleFunc("/animals/{id}", animalHandler.GetAnimalByID)
+	http.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
+
+	http.HandleFunc("POST /animals", animalHandler.CreateAnimal)
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

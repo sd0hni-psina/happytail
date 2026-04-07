@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"github.com/sd0hni-psina/happytail/internal/models"
 )
 
 type AnimalHandler struct {
@@ -41,5 +43,29 @@ func (h *AnimalHandler) GetAnimalByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(animal)
+}
+
+func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
+	var input models.CreateAnimalInput
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if input.Name == "" || input.Type == "" {
+		http.Error(w, "Name and Type are required", http.StatusBadRequest)
+		return
+	}
+
+	animal, err := h.repo.Create(r.Context(), input)
+	if err != nil {
+		http.Error(w, "Failed to create animal", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(animal)
 }

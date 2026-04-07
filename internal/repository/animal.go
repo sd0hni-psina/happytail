@@ -55,3 +55,17 @@ func (r *AnimalRepository) GetByID(ctx context.Context, id int) (*models.Animal,
 	}
 	return &a, nil
 }
+
+func (r *AnimalRepository) Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error) {
+	query := `INSERT INTO animals (animal_type, name, age, breed, color, is_vaccinated, has_vet_passport, description, shelter_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			RETURNING id, animal_type, name, age, breed, color, is_vaccinated, has_vet_passport, description, shelter_id, status, share_count, created_at`
+	row := r.pool.QueryRow(ctx, query, input.Type, input.Name, input.Age, input.Breed, input.Color, input.IsVaccinated, input.HasVetPassport, input.Description, input.ShelterID)
+
+	a := models.Animal{}
+	err := row.Scan(&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color, &a.IsVaccinated, &a.HasVetPassport, &a.Description, &a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}

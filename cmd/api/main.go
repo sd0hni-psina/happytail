@@ -7,6 +7,7 @@ import (
 
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
+	"github.com/sd0hni-psina/happytail/internal/repository"
 )
 
 func main() {
@@ -18,29 +19,20 @@ func main() {
 		PostgresHost:     os.Getenv("POSTGRES_HOST"),
 		PostgresPort:     os.Getenv("POSTGRES_PORT"),
 	}
-	if cfg.PostgresUser == "" {
-		panic("POSTGRES_USER is not set")
-	}
-	if cfg.PostgresPassword == "" {
-		panic("POSTGRES_PASSWORD is not set")
-	}
-	if cfg.PostgresDB == "" {
-		panic("POSTGRES_DB is not set")
-	}
-	if cfg.AppPort == "" {
-		panic("APP_PORT is not set")
-	}
 
 	http.HandleFunc("/health", handler.HealthHandler)
+
 	pool, err := cfg.ConnectDB()
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database: %v", err))
 	}
 	defer pool.Close()
-	_ = pool
+
+	animalRepo := repository.NewAnimalRepository(pool)
+	animalHandler := handler.NewAnimalHandler(animalRepo)
+	http.HandleFunc("/animals", animalHandler.GetAllAnimals)
 
 	fmt.Println("db connected!")
-
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)
 	err = http.ListenAndServe(":"+cfg.AppPort, nil)
 	if err != nil {

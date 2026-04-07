@@ -32,6 +32,8 @@ func main() {
 	animalHandler := handler.NewAnimalHandler(animalRepo)
 	http.HandleFunc("/animals", animalHandler.GetAllAnimals)
 
+	http.HandleFunc("/animals/{id}", animalHandler.GetAnimalByID)
+
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)
 	err = http.ListenAndServe(":"+cfg.AppPort, nil)

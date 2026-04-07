@@ -8,4 +8,5 @@ import (
 
 type AnimalRepository interface {
 	GetAll(ctx context.Context) ([]models.Animal, error)
+	GetByID(ctx context.Context, id int) (*models.Animal, error)
 }

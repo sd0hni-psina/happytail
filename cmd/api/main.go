@@ -8,6 +8,7 @@ import (
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
 	"github.com/sd0hni-psina/happytail/internal/repository"
+	"github.com/sd0hni-psina/happytail/internal/service"
 )
 
 func main() {
@@ -29,7 +30,8 @@ func main() {
 	defer pool.Close()
 
 	animalRepo := repository.NewAnimalRepository(pool)
-	animalHandler := handler.NewAnimalHandler(animalRepo)
+	animalSvc := service.NewAnimalService(animalRepo)
+	animalHandler := handler.NewAnimalHandler(animalSvc)
 	http.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 
 	http.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)

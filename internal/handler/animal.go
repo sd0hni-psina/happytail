@@ -9,15 +9,15 @@ import (
 )
 
 type AnimalHandler struct {
-	repo AnimalRepository
+	svc AnimalService
 }
 
-func NewAnimalHandler(repo AnimalRepository) *AnimalHandler {
-	return &AnimalHandler{repo: repo}
+func NewAnimalHandler(svc AnimalService) *AnimalHandler {
+	return &AnimalHandler{svc: svc}
 }
 
 func (h *AnimalHandler) GetAllAnimals(w http.ResponseWriter, r *http.Request) {
-	animals, err := h.repo.GetAll(r.Context())
+	animals, err := h.svc.GetAllAnimals(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to fetch animals", http.StatusInternalServerError)
 		return
@@ -33,7 +33,7 @@ func (h *AnimalHandler) GetAnimalByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid animal ID", http.StatusBadRequest)
 		return
 	}
-	animal, err := h.repo.GetByID(r.Context(), id)
+	animal, err := h.svc.GetAnimalByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Animal not found", http.StatusNotFound)
 		return
@@ -60,7 +60,7 @@ func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	animal, err := h.repo.Create(r.Context(), input)
+	animal, err := h.svc.CreateAnimal(r.Context(), input)
 	if err != nil {
 		http.Error(w, "Failed to create animal", http.StatusInternalServerError)
 		return

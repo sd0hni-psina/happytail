@@ -1,0 +1,3 @@
+ALTER TABLE users 
+ALTER COLUMN full_name SET NOT NULL,
+ALTER COLUMN phone_number SET NOT NULL;

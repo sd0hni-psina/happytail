@@ -45,6 +45,7 @@ func (r *AnimalRepository) GetByID(ctx context.Context, id int) (*models.Animal,
 	   shelter_id, status, share_count, created_at
 	   FROM animals WHERE id = $1`
 	row := r.pool.QueryRow(ctx, query, id)
+	
 	a := models.Animal{}
 	err := row.Scan(&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color, &a.IsVaccinated, &a.HasVetPassport, &a.Description, &a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt)
 	if err != nil {

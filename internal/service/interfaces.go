@@ -41,3 +41,21 @@ func (s *ShelterService) GetShelterByID(ctx context.Context, id int) (*models.Sh
 func (s *ShelterService) CreateShelter(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error) {
 	return s.repo.Create(ctx, input)
 }
+
+type UserRepository interface {
+	GetAll(ctx context.Context) ([]models.User, error)
+	GetByID(ctx context.Context, id int) (*models.User, error)
+	Create(ctx context.Context, input models.CreateUserInput) (*models.User, error)
+}
+
+func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, error) {
+	return s.repo.GetAll(ctx)
+}
+
+func (s *UserService) GetUserByID(ctx context.Context, id int) (*models.User, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
+func (s *UserService) CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error) {
+	return s.repo.Create(ctx, input)
+}

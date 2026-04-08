@@ -7,11 +7,15 @@ import (
 
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
+	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/repository"
 	"github.com/sd0hni-psina/happytail/internal/service"
 )
 
 func main() {
+
+	mux := http.NewServeMux()
+
 	cfg := config.Config{
 		PostgresUser:     os.Getenv("POSTGRES_USER"),
 		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
@@ -21,7 +25,7 @@ func main() {
 		PostgresPort:     os.Getenv("POSTGRES_PORT"),
 	}
 
-	http.HandleFunc("/health", handler.HealthHandler)
+	mux.HandleFunc("/health", handler.HealthHandler)
 
 	pool, err := cfg.ConnectDB()
 	if err != nil {
@@ -32,15 +36,15 @@ func main() {
 	animalRepo := repository.NewAnimalRepository(pool)
 	animalSvc := service.NewAnimalService(animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
-	http.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
+	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 
-	http.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
+	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
 
-	http.HandleFunc("POST /animals", animalHandler.CreateAnimal)
+	mux.HandleFunc("POST /animals", animalHandler.CreateAnimal)
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)
-	err = http.ListenAndServe(":"+cfg.AppPort, nil)
+	err = http.ListenAndServe(":"+cfg.AppPort, middleware.Logger(mux))
 	if err != nil {
 		panic(err)
 	}

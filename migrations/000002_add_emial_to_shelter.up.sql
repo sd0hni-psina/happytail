@@ -1,0 +1,1 @@
+ALTER TABLE shelters ADD COLUMN email TEXT;

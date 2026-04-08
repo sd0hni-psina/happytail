@@ -42,6 +42,15 @@ func main() {
 
 	mux.HandleFunc("POST /animals", animalHandler.CreateAnimal)
 
+	shelterRepo := repository.NewShelterRepository(pool)
+	shelterSvc := service.NewShelterService(shelterRepo)
+	shelterHandler := handler.NewShelterHandler(shelterSvc)
+	mux.HandleFunc("GET /shelters", shelterHandler.GetAllShelters)
+
+	mux.HandleFunc("GET /shelters/{id}", shelterHandler.GetShelterByID)
+
+	mux.HandleFunc("POST /shelters", shelterHandler.CreateShelter)
+
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)
 	err = http.ListenAndServe(":"+cfg.AppPort, middleware.Logger(middleware.Recovery(mux)))

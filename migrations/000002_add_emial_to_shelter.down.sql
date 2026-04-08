@@ -1,0 +1,1 @@
+ALTER TABLE shelters DROP COLUMN email;

@@ -44,7 +44,7 @@ func main() {
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)
-	err = http.ListenAndServe(":"+cfg.AppPort, middleware.Logger(mux))
+	err = http.ListenAndServe(":"+cfg.AppPort, middleware.Logger(middleware.Recovery(mux)))
 	if err != nil {
 		panic(err)
 	}

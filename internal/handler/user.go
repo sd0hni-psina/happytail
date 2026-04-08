@@ -72,3 +72,26 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(user)
 }
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var input models.LoginInput
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if input.Email == "" || input.Password == "" {
+		http.Error(w, "Email and Password are required", http.StatusBadRequest)
+		return
+	}
+
+	token, err := h.svc.Login(r.Context(), input.Email, input.Password)
+	if err != nil {
+		log.Printf("Login error: %v", err)
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}

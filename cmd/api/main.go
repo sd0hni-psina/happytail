@@ -13,9 +13,7 @@ import (
 )
 
 func main() {
-
 	mux := http.NewServeMux()
-
 	cfg := config.Config{
 		PostgresUser:     os.Getenv("POSTGRES_USER"),
 		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
@@ -23,42 +21,39 @@ func main() {
 		AppPort:          os.Getenv("APP_PORT"),
 		PostgresHost:     os.Getenv("POSTGRES_HOST"),
 		PostgresPort:     os.Getenv("POSTGRES_PORT"),
+		JWTSecret:        os.Getenv("JWT_SECRET"),
 	}
-
 	mux.HandleFunc("/health", handler.HealthHandler)
-
 	pool, err := cfg.ConnectDB()
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database: %v", err))
 	}
 	defer pool.Close()
 
+	authMiddleware := middleware.Auth(cfg.JWTSecret)
+
+	// ANIMALS HANDLERS
 	animalRepo := repository.NewAnimalRepository(pool)
 	animalSvc := service.NewAnimalService(animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
 	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
-
 	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
-
-	mux.HandleFunc("POST /animals", animalHandler.CreateAnimal)
-
+	mux.Handle("POST /animals", authMiddleware(http.HandlerFunc(animalHandler.CreateAnimal)))
+	// SHELTERS HANDLERS
 	shelterRepo := repository.NewShelterRepository(pool)
 	shelterSvc := service.NewShelterService(shelterRepo)
 	shelterHandler := handler.NewShelterHandler(shelterSvc)
 	mux.HandleFunc("GET /shelters", shelterHandler.GetAllShelters)
-
 	mux.HandleFunc("GET /shelters/{id}", shelterHandler.GetShelterByID)
-
-	mux.HandleFunc("POST /shelters", shelterHandler.CreateShelter)
-
+	mux.Handle("POST /shelters", authMiddleware(http.HandlerFunc(shelterHandler.CreateShelter)))
+	// USERS HANDLERS
 	userRepo := repository.NewUserRepository(pool)
-	userSvc := service.NewUserService(userRepo)
+	userSvc := service.NewUserService(userRepo, cfg.JWTSecret)
 	userHandler := handler.NewUserHandler(userSvc)
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
-
 	mux.HandleFunc("GET /users/{id}", userHandler.GetUserByID)
-
 	mux.HandleFunc("POST /users", userHandler.CreateUser)
+	mux.HandleFunc("POST /auth/login", userHandler.Login)
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

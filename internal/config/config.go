@@ -14,6 +14,7 @@ type Config struct {
 	AppPort          string
 	PostgresHost     string
 	PostgresPort     string
+	JWTSecret        string
 }
 
 func (c *Config) DatabaseURL() string {

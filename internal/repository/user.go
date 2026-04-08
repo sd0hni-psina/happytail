@@ -73,3 +73,19 @@ func (r *UserRepository) Create(ctx context.Context, input models.CreateUserInpu
 	}
 	return &u, nil
 }
+
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	query := `SELECT id, full_name, email, phone_number, city, points, password_hash, created_at 
+	FROM users WHERE email = $1`
+	row := r.pool.QueryRow(ctx, query, email)
+
+	u := models.User{}
+	err := row.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.PasswordHash, &u.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &u, nil
+}

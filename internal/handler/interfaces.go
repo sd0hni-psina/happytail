@@ -24,3 +24,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
 }
+
+type AdoptionService interface {
+	CreateAdoption(ctx context.Context, userID, animalID int) (*models.Adoption, error)
+}

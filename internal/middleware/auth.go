@@ -1,12 +1,22 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
+
+func GetUserID(ctx context.Context) (int, bool) {
+	userID, ok := ctx.Value(UserIDKey).(int)
+	return userID, ok
+}
 
 func Auth(secret string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -34,8 +44,14 @@ func Auth(secret string) func(next http.Handler) http.Handler {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-
-			next.ServeHTTP(w, r)
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			userID := int(claims["user_id"].(float64))
+			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

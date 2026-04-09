@@ -1,0 +1,40 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/sd0hni-psina/happytail/internal/middleware"
+	"github.com/sd0hni-psina/happytail/internal/models"
+)
+
+type AdoptionHandler struct {
+	svc AdoptionService
+}
+
+func NewAdoptionHandler(svc AdoptionService) *AdoptionHandler {
+	return &AdoptionHandler{svc: svc}
+}
+
+func (h *AdoptionHandler) CreateAdoption(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Failed to get user ID", http.StatusUnauthorized)
+		return
+	}
+
+	var input models.CreateAdoptionInput
+	json.NewDecoder(r.Body).Decode(&input)
+	if input.AnimalID == 0 {
+		http.Error(w, "Animal ID is required", http.StatusBadRequest)
+		return
+	}
+
+	adoption, err := h.svc.CreateAdoption(r.Context(), userID, input.AnimalID)
+	if err != nil {
+		http.Error(w, "Failed to create adoption", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(adoption)
+}

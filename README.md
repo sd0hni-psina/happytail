@@ -1,5 +1,7 @@
 # 🐾 Happytail
 
+![logo](https://github.com/sd0hni-psina/happytail/blob/master/Gemini_Generated_Image_90h02390h02390h0.png)
+
 Backend API для платформы по усыновлению домашних животных из приютов.
 
 ## Стек

@@ -17,13 +17,16 @@ func NewAnimalHandler(svc AnimalService) *AnimalHandler {
 }
 
 func (h *AnimalHandler) GetAllAnimals(w http.ResponseWriter, r *http.Request) {
-	animals, err := h.svc.GetAllAnimals(r.Context())
+	params := models.ParsePagination(r)
+
+	animals, total, err := h.svc.GetAllAnimals(r.Context(), params)
 	if err != nil {
 		http.Error(w, "Failed to fetch animals", http.StatusInternalServerError)
 		return
 	}
+	response := models.NewPaginatedResponse(animals, total, params)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(animals)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *AnimalHandler) GetAnimalByID(w http.ResponseWriter, r *http.Request) {

@@ -7,7 +7,7 @@ import (
 )
 
 type AnimalRepository interface {
-	GetAll(ctx context.Context) ([]models.Animal, error)
+	GetAll(ctx context.Context, limit, offset int) ([]models.Animal, int, error)
 	GetByID(ctx context.Context, id int) (*models.Animal, error)
 	Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 }

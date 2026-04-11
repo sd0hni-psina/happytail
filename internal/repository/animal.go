@@ -27,8 +27,8 @@ func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int) ([]mod
 	query := `SELECT id, animal_type, name, age, breed, color, 
        is_vaccinated, has_vet_passport, description, 
        shelter_id, status, share_count, created_at
-	   FROM animals ODER BY created_at DESC LIMIT $1 OFFSET $2`
-	   
+	   FROM animals ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+
 	rows, err := r.pool.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, 0, err
@@ -40,7 +40,7 @@ func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int) ([]mod
 		a := models.Animal{}
 		err := rows.Scan(&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color, &a.IsVaccinated, &a.HasVetPassport, &a.Description, &a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt)
 		if err != nil {
-			return nil, 0,err
+			return nil, 0, err
 		}
 		animals = append(animals, a)
 	}
@@ -53,12 +53,12 @@ func (r *AnimalRepository) GetByID(ctx context.Context, id int) (*models.Animal,
 	   shelter_id, status, share_count, created_at
 	   FROM animals WHERE id = $1`
 	row := r.pool.QueryRow(ctx, query, id)
-	
+
 	a := models.Animal{}
 	err := row.Scan(&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color, &a.IsVaccinated, &a.HasVetPassport, &a.Description, &a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, models.ErrNotFound
 		}
 		return nil, err
 	}

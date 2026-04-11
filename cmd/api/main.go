@@ -56,7 +56,7 @@ func main() {
 	mux.HandleFunc("POST /auth/login", userHandler.Login)
 	// ADOPTIONS HANDLERS
 	adoptionRepo := repository.NewAdoptionRepository(pool)
-	adoptionSvc := service.NewAdoptionService(adoptionRepo)
+	adoptionSvc := service.NewAdoptionService(adoptionRepo, animalRepo)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
 

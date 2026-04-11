@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sd0hni-psina/happytail/internal/models"
 	"golang.org/x/crypto/bcrypt"
@@ -47,9 +48,8 @@ FROM users WHERE id = $1`
 	u := models.User{}
 	err := row.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.PasswordHash, &u.CreatedAt)
 	if err != nil {
-		log.Printf("GetByID scan error: %v", err)
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, models.ErrNotFound
 		}
 		log.Printf("GetByID error: %v", err)
 		return nil, err
@@ -65,10 +65,16 @@ func (r *UserRepository) Create(ctx context.Context, input models.CreateUserInpu
 	input.Password = string(hash)
 	query := `INSERT INTO users (full_name, email, phone_number, password_hash) VALUES ($1, $2, $3, $4) 
 	RETURNING id, full_name, email, phone_number, city, points, password_hash, created_at`
+
 	row := r.pool.QueryRow(ctx, query, input.FullName, input.Email, input.PhoneNumber, input.Password)
+
 	u := models.User{}
 	err = row.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.PasswordHash, &u.CreatedAt)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, models.ErrConflict
+		}
 		return nil, err
 	}
 	return &u, nil

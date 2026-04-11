@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -37,11 +38,11 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.svc.GetUserByID(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Failed to fetch user", http.StatusInternalServerError)
-		return
-	}
-	if user == nil {
-		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -63,8 +64,10 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.svc.CreateUser(r.Context(), input)
 	if err != nil {
-		log.Printf("CreateUser error: %v", err)
-
+		if errors.Is(err, models.ErrConflict) {
+			http.Error(w, "Email already exists", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}

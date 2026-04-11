@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
@@ -53,7 +54,7 @@ func (r *ShelterRepository) GetByID(ctx context.Context, id int) (*models.Shelte
 	err := row.Scan(&s.ID, &s.Name, &s.Address, &s.Email, &s.Phone, &s.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, models.ErrNotFound
 		}
 		return nil, err
 	}
@@ -68,6 +69,10 @@ func (r *ShelterRepository) Create(ctx context.Context, input models.CreateShelt
 	s := models.Shelter{}
 	err := row.Scan(&s.ID, &s.Name, &s.Address, &s.Email, &s.Phone, &s.CreatedAt)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, models.ErrConflict
+		}
 		return nil, err
 	}
 	return &s, nil

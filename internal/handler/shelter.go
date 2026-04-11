@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -35,11 +36,11 @@ func (h *ShelterHandler) GetShelterByID(w http.ResponseWriter, r *http.Request) 
 	}
 	shelter, err := h.svc.GetShelterByID(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Shelter not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Failed to fetch shelter", http.StatusInternalServerError)
-		return
-	}
-	if shelter == nil {
-		http.Error(w, "Shelter not found", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -62,6 +63,10 @@ func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 
 	shelter, err := h.svc.CreateShelter(r.Context(), input)
 	if err != nil {
+		if errors.Is(err, models.ErrConflict) {
+			http.Error(w, "Shelter with the same name or email already exists", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Failed to create shelter", http.StatusInternalServerError)
 		return
 	}

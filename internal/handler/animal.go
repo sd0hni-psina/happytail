@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -38,11 +39,11 @@ func (h *AnimalHandler) GetAnimalByID(w http.ResponseWriter, r *http.Request) {
 	}
 	animal, err := h.svc.GetAnimalByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Animal not found", http.StatusNotFound)
-		return
-	}
-	if animal == nil {
-		http.Error(w, "Animal not found", http.StatusNotFound)
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Animal not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to fetch animal", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

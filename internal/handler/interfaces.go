@@ -7,7 +7,7 @@ import (
 )
 
 type AnimalService interface {
-	GetAllAnimals(ctx context.Context) ([]models.Animal, error)
+	GetAllAnimals(ctx context.Context, params models.PaginationParams) ([]models.Animal, int, error)
 	GetAnimalByID(ctx context.Context, id int) (*models.Animal, error)
 	CreateAnimal(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 }

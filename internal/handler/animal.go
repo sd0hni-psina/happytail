@@ -59,8 +59,8 @@ func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.Name == "" || input.Type == "" {
-		http.Error(w, "Name and Type are required", http.StatusBadRequest)
+	if err := input.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

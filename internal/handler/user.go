@@ -57,8 +57,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if input.FullName == "" || input.Email == "" || input.Password == "" {
-		http.Error(w, "Name, Email, and Password are required", http.StatusBadRequest)
+	if err := input.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

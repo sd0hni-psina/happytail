@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/sd0hni-psina/happytail/internal/middleware"
@@ -32,6 +33,10 @@ func (h *AdoptionHandler) CreateAdoption(w http.ResponseWriter, r *http.Request)
 
 	adoption, err := h.svc.CreateAdoption(r.Context(), userID, input.AnimalID)
 	if err != nil {
+		if errors.Is(err, models.ErrNotAvailable) {
+			http.Error(w, "Animal is not available for adoption", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Failed to create adoption", http.StatusInternalServerError)
 		return
 	}

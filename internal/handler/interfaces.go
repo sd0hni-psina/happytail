@@ -28,3 +28,9 @@ type UserService interface {
 type AdoptionService interface {
 	CreateAdoption(ctx context.Context, userID, animalID int) (*models.Adoption, error)
 }
+
+type PostService interface {
+	GetAllPost(ctx context.Context) ([]models.Post, error)
+	GetPostByID(ctx context.Context, id int) (*models.Post, error)
+	CreatePost(ctx context.Context, input models.PostInput) (*models.Post, error)
+}

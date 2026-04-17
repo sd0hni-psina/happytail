@@ -28,3 +28,9 @@ type UserRepository interface {
 type AdoptionRepository interface {
 	Create(ctx context.Context, userID, animalID int) (*models.Adoption, error)
 }
+
+type PostRepository interface {
+	GetAll(ctx context.Context) ([]models.Post, error)
+	GetByID(ctx context.Context, id int) (*models.Post, error)
+	Create(ctx context.Context, input models.PostInput) (*models.Post, error)
+}

@@ -81,11 +81,9 @@ func main() {
 			panic(err)
 		}
 	}()
-
 	<-ctx.Done()
 
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
 	srv.Shutdown(ctxShutDown)
 }

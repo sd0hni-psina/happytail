@@ -17,6 +17,13 @@ func NewShelterHandler(svc ShelterService) *ShelterHandler {
 	return &ShelterHandler{svc: svc}
 }
 
+// GetAllShelters godoc
+// @Summary Получить все приюты
+// @Tags shelters
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Shelter
+// @Router /shelters [get]
 func (h *ShelterHandler) GetAllShelters(w http.ResponseWriter, r *http.Request) {
 	shelters, err := h.svc.GetAllShelters(r.Context())
 	if err != nil {
@@ -27,6 +34,15 @@ func (h *ShelterHandler) GetAllShelters(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(shelters)
 }
 
+// GetShelterByID godoc
+// @Summary Получить приют по ID
+// @Tags shelters
+// @Accept json
+// @Produce json
+// @Param id path int true "ID приюта"
+// @Success 200 {object} models.Shelter
+// @Failure 404 {object} map[string]string
+// @Router /shelters/{id} [get]
 func (h *ShelterHandler) GetShelterByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -47,6 +63,17 @@ func (h *ShelterHandler) GetShelterByID(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(shelter)
 }
 
+// CreateShelter godoc
+// @Summary Создать приют
+// @Tags shelters
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body models.CreateShelterInput true "данные приюта"
+// @Success 201 {object} models.Shelter
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /shelters [post]
 func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateShelterInput
 

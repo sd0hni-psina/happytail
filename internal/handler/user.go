@@ -18,6 +18,13 @@ func NewUserHandler(svc UserService) *UserHandler {
 	return &UserHandler{svc: svc}
 }
 
+// GetAllUsers godoc
+// @Summary Получить всех пользователей
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.User
+// @Router /users [get]
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	user, err := h.svc.GetAllUsers(r.Context())
 	if err != nil {
@@ -28,6 +35,15 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+// GetUserByID godoc
+// @Summary Получить пользователя по ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "ID пользователя"
+// @Success 200 {object} models.User
+// @Failure 404 {object} map[string]string
+// @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -49,6 +65,15 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+// CreateUser godoc
+// @Summary Создать пользователя
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param input body models.CreateUserInput true "данные пользователя"
+// @Success 201 {object} models.User
+// @Failure 400 {object} map[string]string
+// @Router /users [post]
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateUserInput
 
@@ -76,6 +101,16 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+// Login godoc
+// @Summary Логин пользователя
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body models.LoginInput true "логин и пароль"
+// @Success 200 {object} models.AuthResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/login [post]
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var input models.LoginInput
 

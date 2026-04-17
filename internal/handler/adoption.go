@@ -17,6 +17,17 @@ func NewAdoptionHandler(svc AdoptionService) *AdoptionHandler {
 	return &AdoptionHandler{svc: svc}
 }
 
+// CreateAdoption godoc
+// @Summary Создать заявку на усыновление
+// @Tags adoptions
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body models.CreateAdoptionInput true "данные заявки"
+// @Success 201 {object} models.Adoption
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /adoptions [post]
 func (h *AdoptionHandler) CreateAdoption(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

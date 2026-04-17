@@ -17,6 +17,12 @@ func NewAnimalHandler(svc AnimalService) *AnimalHandler {
 	return &AnimalHandler{svc: svc}
 }
 
+// GetAllAnimals godoc
+// @Summary Получить всех животных
+// @Tags animals
+// @Produce json
+// @Success 200 {array} models.Animal
+// @Router /animals [get]
 func (h *AnimalHandler) GetAllAnimals(w http.ResponseWriter, r *http.Request) {
 	params := models.ParsePagination(r)
 
@@ -50,6 +56,15 @@ func (h *AnimalHandler) GetAnimalByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(animal)
 }
 
+// CreateAnimal godoc
+// @Summary Создать животное
+// @Tags animals
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body models.CreateAnimalInput true "данные животного"
+// @Success 201 {object} models.Animal
+// @Router /animals [post]
 func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateAnimalInput
 

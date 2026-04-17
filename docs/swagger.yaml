@@ -1,0 +1,409 @@
+basePath: /
+definitions:
+  github_com_sd0hni-psina_happytail_internal_models.Adoption:
+    properties:
+      animal_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.Animal:
+    properties:
+      age:
+        type: integer
+      breed:
+        type: string
+      color:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      has_vet_passport:
+        type: boolean
+      id:
+        type: integer
+      is_vaccinated:
+        type: boolean
+      name:
+        type: string
+      share_count:
+        type: integer
+      shelter_id:
+        type: integer
+      status:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalType'
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.AnimalType:
+    enum:
+    - dog
+    - cat
+    - bunny
+    type: string
+    x-enum-varnames:
+    - AnimalTypeDog
+    - AnimalTypeCat
+    - AnimalTypeBunny
+  github_com_sd0hni-psina_happytail_internal_models.AuthResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.CreateAdoptionInput:
+    properties:
+      animal_id:
+        type: integer
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.CreateAnimalInput:
+    properties:
+      age:
+        type: integer
+      animal_type:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalType'
+      breed:
+        type: string
+      color:
+        type: string
+      description:
+        type: string
+      has_vet_passport:
+        type: boolean
+      is_vaccinated:
+        type: boolean
+      name:
+        type: string
+      shelter_id:
+        type: integer
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.CreateShelterInput:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.CreateUserInput:
+    properties:
+      city:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.Shelter:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.User:
+    properties:
+      city:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      phone_number:
+        type: string
+      points:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Backend API для платформы по усыновлению домашних животных.
+  title: Happytail API
+  version: "1.0"
+paths:
+  /adoptions:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные заявки
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.CreateAdoptionInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Adoption'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создать заявку на усыновление
+      tags:
+      - adoptions
+  /animals:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Animal'
+            type: array
+      summary: Получить всех животных
+      tags:
+      - animals
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные животного
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.CreateAnimalInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Animal'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать животное
+      tags:
+      - animals
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: логин и пароль
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Логин пользователя
+      tags:
+      - auth
+  /shelters:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Shelter'
+            type: array
+      summary: Получить все приюты
+      tags:
+      - shelters
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные приюта
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.CreateShelterInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Shelter'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создать приют
+      tags:
+      - shelters
+  /shelters/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID приюта
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Shelter'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить приют по ID
+      tags:
+      - shelters
+  /users:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.User'
+            type: array
+      summary: Получить всех пользователей
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные пользователя
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать пользователя
+      tags:
+      - users
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.User'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить пользователя по ID
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

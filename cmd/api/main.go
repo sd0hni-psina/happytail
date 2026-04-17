@@ -10,13 +10,24 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/sd0hni-psina/happytail/docs" // обязательно!
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
 	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/repository"
 	"github.com/sd0hni-psina/happytail/internal/service"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title Happytail API
+// @version 1.0
+// @description Backend API для платформы по усыновлению домашних животных.
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	mux := http.NewServeMux()
 	cfg := config.Config{
@@ -29,6 +40,7 @@ func main() {
 		JWTSecret:        os.Getenv("JWT_SECRET"),
 	}
 	mux.HandleFunc("/health", handler.HealthHandler)
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 	pool, err := cfg.ConnectDB()
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database: %v", err))
@@ -41,8 +53,10 @@ func main() {
 	animalRepo := repository.NewAnimalRepository(pool)
 	animalSvc := service.NewAnimalService(animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
+
 	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
+
 	mux.Handle("POST /animals", authMiddleware(http.HandlerFunc(animalHandler.CreateAnimal)))
 	// SHELTERS HANDLERS
 	shelterRepo := repository.NewShelterRepository(pool)
@@ -80,6 +94,7 @@ func main() {
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
+
 	}()
 	<-ctx.Done()
 

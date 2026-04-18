@@ -53,10 +53,8 @@ func main() {
 	animalRepo := repository.NewAnimalRepository(pool)
 	animalSvc := service.NewAnimalService(animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
-
 	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
-
 	mux.Handle("POST /animals", authMiddleware(http.HandlerFunc(animalHandler.CreateAnimal)))
 	// SHELTERS HANDLERS
 	shelterRepo := repository.NewShelterRepository(pool)
@@ -78,6 +76,14 @@ func main() {
 	adoptionSvc := service.NewAdoptionService(adoptionRepo, animalRepo)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
+
+	// POSTS HANDLERS
+	postRepo := repository.NewPostRepository(pool)
+	postSvc := service.NewPostService(postRepo)
+	postHandler := handler.NewPostHandler(postSvc)
+	mux.HandleFunc("GET /post", postHandler.GetAllPost)
+	mux.HandleFunc("HET/ /post/{id}", postHandler.GetPostByID)
+	mux.HandleFunc("POST /post", postHandler.CreatePost)
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

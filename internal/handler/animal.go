@@ -35,7 +35,15 @@ func (h *AnimalHandler) GetAllAnimals(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-
+// GetAnimalByID godoc
+// @Summary Получить животное по ID
+// @Tags animals
+// @Accept json
+// @Produce json
+// @Param id path int true "ID животного"
+// @Success 200 {object} models.Animal
+// @Failure 404 {object} map[string]string
+// @Router /animals/{id} [get]
 func (h *AnimalHandler) GetAnimalByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)

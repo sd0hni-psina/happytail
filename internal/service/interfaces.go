@@ -7,7 +7,7 @@ import (
 )
 
 type AnimalRepository interface {
-	GetAll(ctx context.Context, limit, offset int) ([]models.Animal, int, error)
+	GetAll(ctx context.Context, limit, offset int, filter models.FilterParams) ([]models.Animal, int, error)
 	GetByID(ctx context.Context, id int) (*models.Animal, error)
 	Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 }
@@ -32,5 +32,5 @@ type AdoptionRepository interface {
 type PostRepository interface {
 	GetAll(ctx context.Context) ([]models.Post, error)
 	GetByID(ctx context.Context, id int) (*models.Post, error)
-	Create(ctx context.Context, input models.PostInput) (*models.Post, error)
+	Create(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }

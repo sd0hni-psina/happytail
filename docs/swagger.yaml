@@ -83,6 +83,25 @@ definitions:
       shelter_id:
         type: integer
     type: object
+  github_com_sd0hni-psina_happytail_internal_models.CreatePostInput:
+    properties:
+      animalID:
+        type: integer
+      contactInfo:
+        type: string
+      listingType:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType'
+      photoURLs:
+        items:
+          type: string
+        type: array
+      price:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Money'
+      reason:
+        type: string
+      userID:
+        type: integer
+    type: object
   github_com_sd0hni-psina_happytail_internal_models.CreateShelterInput:
     properties:
       address:
@@ -107,6 +126,14 @@ definitions:
       phone_number:
         type: string
     type: object
+  github_com_sd0hni-psina_happytail_internal_models.ListingType:
+    enum:
+    - sale
+    - give
+    type: string
+    x-enum-varnames:
+    - ListingTypeSale
+    - ListingTypeGive
   github_com_sd0hni-psina_happytail_internal_models.LoginInput:
     properties:
       email:
@@ -114,6 +141,50 @@ definitions:
       password:
         type: string
     type: object
+  github_com_sd0hni-psina_happytail_internal_models.Money:
+    properties:
+      amount:
+        type: integer
+      currency:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.Post:
+    properties:
+      animal_id:
+        type: integer
+      contact_info:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      listing_type:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType'
+      photo_urls:
+        items:
+          type: string
+        type: array
+      price:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Money'
+      reason:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.PostStatus'
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.PostStatus:
+    enum:
+    - active
+    - inactive
+    - deleted
+    type: string
+    x-enum-varnames:
+    - PostStatusActive
+    - PostStatusInactive
+    - PostStatusDeleted
   github_com_sd0hni-psina_happytail_internal_models.Shelter:
     properties:
       address:
@@ -224,6 +295,32 @@ paths:
       summary: Создать животное
       tags:
       - animals
+  /animals/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID животного
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Animal'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить животное по ID
+      tags:
+      - animals
   /auth/login:
     post:
       consumes:
@@ -257,6 +354,92 @@ paths:
       summary: Логин пользователя
       tags:
       - auth
+  /post:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новый пост
+      parameters:
+      - description: данные поста
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.CreatePostInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post'
+        "400":
+          description: Invalid input
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Failed to create post
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Создать пост
+      tags:
+      - Post
+  /post/{id}:
+    get:
+      description: Возвращает один пост по его ID
+      parameters:
+      - description: ID поста
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post'
+        "400":
+          description: Invalid post ID
+          schema:
+            type: string
+        "404":
+          description: Post not found
+          schema:
+            type: string
+        "500":
+          description: Failed to fetch post
+          schema:
+            type: string
+      summary: Получить пост по ID
+      tags:
+      - Post
+  /posts:
+    get:
+      description: Возвращает список всех постов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post'
+            type: array
+        "500":
+          description: Failed to fetch posts
+          schema:
+            type: string
+      summary: Получить все посты
+      tags:
+      - Post
   /shelters:
     get:
       consumes:

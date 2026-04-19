@@ -129,6 +129,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/animals/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "animals"
+                ],
+                "summary": "Получить животное по ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID животного",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Animal"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "consumes": [
@@ -175,6 +215,139 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/post": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создаёт новый пост",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Post"
+                ],
+                "summary": "Создать пост",
+                "parameters": [
+                    {
+                        "description": "данные поста",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.CreatePostInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create post",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/{id}": {
+            "get": {
+                "description": "Возвращает один пост по его ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Post"
+                ],
+                "summary": "Получить пост по ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID поста",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid post ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Post not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch post",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/posts": {
+            "get": {
+                "description": "Возвращает список всех постов",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Post"
+                ],
+                "summary": "Получить все посты",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch posts",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -531,6 +704,35 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_sd0hni-psina_happytail_internal_models.CreatePostInput": {
+            "type": "object",
+            "properties": {
+                "animalID": {
+                    "type": "integer"
+                },
+                "contactInfo": {
+                    "type": "string"
+                },
+                "listingType": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType"
+                },
+                "photoURLs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Money"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_sd0hni-psina_happytail_internal_models.CreateShelterInput": {
             "type": "object",
             "properties": {
@@ -568,6 +770,17 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_sd0hni-psina_happytail_internal_models.ListingType": {
+            "type": "string",
+            "enum": [
+                "sale",
+                "give"
+            ],
+            "x-enum-varnames": [
+                "ListingTypeSale",
+                "ListingTypeGive"
+            ]
+        },
         "github_com_sd0hni-psina_happytail_internal_models.LoginInput": {
             "type": "object",
             "properties": {
@@ -578,6 +791,71 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.Money": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.Post": {
+            "type": "object",
+            "properties": {
+                "animal_id": {
+                    "type": "integer"
+                },
+                "contact_info": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "listing_type": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType"
+                },
+                "photo_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Money"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.PostStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.PostStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive",
+                "deleted"
+            ],
+            "x-enum-varnames": [
+                "PostStatusActive",
+                "PostStatusInactive",
+                "PostStatusDeleted"
+            ]
         },
         "github_com_sd0hni-psina_happytail_internal_models.Shelter": {
             "type": "object",

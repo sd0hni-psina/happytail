@@ -14,8 +14,8 @@ func NewAnimalService(repo AnimalRepository) *AnimalService {
 	return &AnimalService{repo: repo}
 }
 
-func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.PaginationParams) ([]models.Animal, int, error) {
-	return s.repo.GetAll(ctx, params.Limit, params.Offset())
+func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.PaginationParams, filter models.FilterParams) ([]models.Animal, int, error) {
+	return s.repo.GetAll(ctx, params.Limit, params.Offset(), filter)
 }
 
 func (s *AnimalService) GetAnimalByID(ctx context.Context, id int) (*models.Animal, error) {

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,9 +19,47 @@ func NewAnimalRepository(pool *pgxpool.Pool) *AnimalRepository {
 	return &AnimalRepository{pool: pool}
 }
 
-func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int) ([]models.Animal, int, error) {
+func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int, filter models.FilterParams) ([]models.Animal, int, error) {
+	conditions := []string{}
+	args := []any{}
+
+	if filter.Type != nil {
+		conditions = append(conditions, fmt.Sprintf("animal_type = $%d", len(args)+1))
+		args = append(args, *filter.Type)
+	}
+
+	if filter.Breed != nil {
+		conditions = append(conditions, fmt.Sprintf("breed = $%d", len(args)+1))
+		args = append(args, *filter.Breed)
+	}
+
+	if filter.Color != nil {
+		conditions = append(conditions, fmt.Sprintf("color = $%d", len(args)+1))
+		args = append(args, *filter.Color)
+	}
+
+	if filter.IsVaccinated != nil {
+		conditions = append(conditions, fmt.Sprintf("is_vaccinated = $%d", len(args)+1))
+		args = append(args, *filter.IsVaccinated)
+	}
+
+	if filter.HasVetPassport != nil {
+		conditions = append(conditions, fmt.Sprintf("has_vet_passport = $%d", len(args)+1))
+		args = append(args, *filter.HasVetPassport)
+	}
+
+	if filter.Status != nil {
+		conditions = append(conditions, fmt.Sprintf("status = $%d", len(args)+1))
+		args = append(args, *filter.Status)
+	}
+
+	whereClause := ""
+	if len(conditions) > 0 {
+		whereClause = "WHERE " + strings.Join(conditions, " AND ")
+	}
+
 	var total int
-	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM animals").Scan(&total)
+	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM animals "+whereClause, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -27,9 +67,10 @@ func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int) ([]mod
 	query := `SELECT id, animal_type, name, age, breed, color, 
        is_vaccinated, has_vet_passport, description, 
        shelter_id, status, share_count, created_at
-	   FROM animals ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+	   FROM animals ` + whereClause + ` ORDER BY created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) + ` OFFSET $` + fmt.Sprint(len(args)+2)
 
-	rows, err := r.pool.Query(ctx, query, limit, offset)
+	args = append(args, limit, offset)
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, 0, err
 	}

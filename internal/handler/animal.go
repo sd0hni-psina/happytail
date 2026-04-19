@@ -25,8 +25,9 @@ func NewAnimalHandler(svc AnimalService) *AnimalHandler {
 // @Router /animals [get]
 func (h *AnimalHandler) GetAllAnimals(w http.ResponseWriter, r *http.Request) {
 	params := models.ParsePagination(r)
+	filter := models.ParseFilter(r)
 
-	animals, total, err := h.svc.GetAllAnimals(r.Context(), params)
+	animals, total, err := h.svc.GetAllAnimals(r.Context(), params, filter)
 	if err != nil {
 		http.Error(w, "Failed to fetch animals", http.StatusInternalServerError)
 		return
@@ -35,6 +36,7 @@ func (h *AnimalHandler) GetAllAnimals(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
+
 // GetAnimalByID godoc
 // @Summary Получить животное по ID
 // @Tags animals

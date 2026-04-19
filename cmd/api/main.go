@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/sd0hni-psina/happytail/docs" // обязательно!
+	_ "github.com/sd0hni-psina/happytail/docs"
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
 	"github.com/sd0hni-psina/happytail/internal/middleware"
@@ -82,8 +82,8 @@ func main() {
 	postSvc := service.NewPostService(postRepo)
 	postHandler := handler.NewPostHandler(postSvc)
 	mux.HandleFunc("GET /post", postHandler.GetAllPost)
-	mux.HandleFunc("HET/ /post/{id}", postHandler.GetPostByID)
-	mux.HandleFunc("POST /post", postHandler.CreatePost)
+	mux.HandleFunc("GET /post/{id}", postHandler.GetPostByID)
+	mux.Handle("POST /post", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

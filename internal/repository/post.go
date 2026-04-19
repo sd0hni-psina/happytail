@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -97,8 +98,8 @@ func (r *PostRepository) GetByID(ctx context.Context, id int) (*models.Post, err
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrNotFound
 		}
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func (r *PostRepository) GetByID(ctx context.Context, id int) (*models.Post, err
 	return &p, nil
 }
 
-func (r *PostRepository) Create(ctx context.Context, input models.PostInput) (*models.Post, error) {
+func (r *PostRepository) Create(ctx context.Context, input models.CreatePostInput) (*models.Post, error) {
 	query := `
         INSERT INTO posts (
             user_id,

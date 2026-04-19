@@ -4,6 +4,8 @@ export
 export PROJECT_ROOT=$(shell pwd)
 
 
+swag:
+	swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
 
 env-up:
 	@docker compose up -d happytail-postgres

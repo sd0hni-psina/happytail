@@ -17,6 +17,14 @@ func NewPostHandler(svc PostService) *PostHandler {
 	return &PostHandler{svc: svc}
 }
 
+// GetAllPost godoc
+// @Summary Получить все посты
+// @Description Возвращает список всех постов
+// @Tags Post
+// @Produce json
+// @Success 200 {array} models.Post
+// @Failure 500 {string} string "Failed to fetch posts"
+// @Router /posts [get]
 func (h *PostHandler) GetAllPost(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.svc.GetAllPost(r.Context())
 	if err != nil {
@@ -27,6 +35,17 @@ func (h *PostHandler) GetAllPost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(posts)
 }
 
+// GetPostByID godoc
+// @Summary Получить пост по ID
+// @Description Возвращает один пост по его ID
+// @Tags Post
+// @Produce json
+// @Param id path int true "ID поста"
+// @Success 200 {object} models.Post
+// @Failure 400 {string} string "Invalid post ID"
+// @Failure 404 {string} string "Post not found"
+// @Failure 500 {string} string "Failed to fetch post"
+// @Router /post/{id} [get]
 func (h *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -47,12 +66,30 @@ func (h *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 
+// CreatePost godoc
+// @Summary Создать пост
+// @Description Создаёт новый пост
+// @Tags Post
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body models.CreatePostInput true "данные поста"
+// @Success 201 {object} models.Post
+// @Failure 400 {string} string "Invalid input"
+// @Failure 409 {string} string "Conflict"
+// @Failure 500 {string} string "Failed to create post"
+// @Router /post [post]
 func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
-	var input models.PostInput
+	var input models.CreatePostInput
 
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	post, err := h.svc.CreatePost(r.Context(), input)

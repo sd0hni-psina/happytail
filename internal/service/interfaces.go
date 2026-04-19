@@ -34,3 +34,10 @@ type PostRepository interface {
 	GetByID(ctx context.Context, id int) (*models.Post, error)
 	Create(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }
+
+type AnimalPhotoRepository interface {
+	Add(ctx context.Context, input models.AnimalPhotoInput) (*models.AnimalPhoto, error)
+	Delete(ctx context.Context, photoID int) error
+	MakeMain(ctx context.Context, animalID, photoID int) error
+	GetAll(ctx context.Context) ([]models.AnimalPhoto, error)
+}

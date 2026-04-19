@@ -34,3 +34,10 @@ type PostService interface {
 	GetPostByID(ctx context.Context, id int) (*models.Post, error)
 	CreatePost(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }
+
+type AnimalPhotoService interface {
+	AddPhoto(ctx context.Context, input models.AnimalPhotoInput) (*models.AnimalPhoto, error)
+	DeletePhoto(ctx context.Context, photoID int) error
+	MakeMainPhoto(ctx context.Context, animalID, photoID int) error
+	GetAllPhotos(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)
+}

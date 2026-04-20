@@ -39,5 +39,5 @@ type AnimalPhotoRepository interface {
 	Add(ctx context.Context, input models.AnimalPhotoInput) (*models.AnimalPhoto, error)
 	Delete(ctx context.Context, photoID int) error
 	MakeMain(ctx context.Context, animalID, photoID int) error
-	GetAll(ctx context.Context) ([]models.AnimalPhoto, error)
+	GetAll(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)
 }

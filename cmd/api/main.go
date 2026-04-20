@@ -76,7 +76,6 @@ func main() {
 	adoptionSvc := service.NewAdoptionService(adoptionRepo, animalRepo)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
-
 	// POSTS HANDLERS
 	postRepo := repository.NewPostRepository(pool)
 	postSvc := service.NewPostService(postRepo)
@@ -84,6 +83,14 @@ func main() {
 	mux.HandleFunc("GET /post", postHandler.GetAllPost)
 	mux.HandleFunc("GET /post/{id}", postHandler.GetPostByID)
 	mux.Handle("POST /post", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
+	// PHOTOS HANDLERS
+	photoRepo := repository.NewAnimalPhotoRepository(pool)
+	photoSvc := service.NewAnimalPhotoService(photoRepo)
+	photoHandler := handler.NewAnimalPhotoHandler(photoSvc)
+	mux.Handle("POST /animals/{id}/photos", authMiddleware(http.HandlerFunc(photoHandler.AddPhoto)))
+	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(http.HandlerFunc(photoHandler.DeletePhoto)))
+	mux.Handle("PATCH /animals/{id}/photos/{photo_id}/main", authMiddleware(http.HandlerFunc(photoHandler.MakeMainPhoto)))
+	mux.HandleFunc("GET /animals/{id}/photos", photoHandler.GetAllPhotos)
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

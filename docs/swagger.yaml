@@ -42,6 +42,28 @@ definitions:
       type:
         $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalType'
     type: object
+  github_com_sd0hni-psina_happytail_internal_models.AnimalPhoto:
+    properties:
+      animal_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_main:
+        type: boolean
+      url:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.AnimalPhotoInput:
+    properties:
+      animal_id:
+        type: integer
+      is_main:
+        type: boolean
+      url:
+        type: string
+    type: object
   github_com_sd0hni-psina_happytail_internal_models.AnimalType:
     enum:
     - dog
@@ -321,6 +343,106 @@ paths:
       summary: Получить животное по ID
       tags:
       - animals
+  /animals/{id}/photos:
+    get:
+      description: Возвращает список фото для конкретного животного (главное фото
+        первым)
+      parameters:
+      - description: ID животного
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalPhoto'
+            type: array
+        "400":
+          description: Invalid id
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Failed to fetch photos
+          schema:
+            type: string
+      summary: Получить все фото животного
+      tags:
+      - AnimalPhotos
+    post:
+      consumes:
+      - application/json
+      description: Добавляет новое фото для конкретного животного
+      parameters:
+      - description: ID животного
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: данные фото
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalPhotoInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalPhoto'
+        "400":
+          description: Invalid input
+          schema:
+            type: string
+        "500":
+          description: Failed to add photo
+          schema:
+            type: string
+      summary: Добавить фото животного
+      tags:
+      - AnimalPhotos
+  /animals/{id}/photos/{photo_id}/main:
+    patch:
+      description: Устанавливает фото как главное для животного
+      parameters:
+      - description: ID животного
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID фото
+        in: path
+        name: photo_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid id
+          schema:
+            type: string
+        "404":
+          description: Photo not available
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Сделать фото главным
+      tags:
+      - AnimalPhotos
   /auth/login:
     post:
       consumes:
@@ -354,6 +476,29 @@ paths:
       summary: Логин пользователя
       tags:
       - auth
+  /photos/{photo_id}:
+    delete:
+      description: Удаляет фото по ID
+      parameters:
+      - description: ID фото
+        in: path
+        name: photo_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid id
+          schema:
+            type: string
+        "500":
+          description: Failed to delete photo
+          schema:
+            type: string
+      summary: Удалить фото
+      tags:
+      - AnimalPhotos
   /post:
     post:
       consumes:

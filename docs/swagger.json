@@ -163,6 +163,155 @@
                 }
             }
         },
+        "/animals/{id}/photos": {
+            "get": {
+                "description": "Возвращает список фото для конкретного животного (главное фото первым)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AnimalPhotos"
+                ],
+                "summary": "Получить все фото животного",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID животного",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalPhoto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch photos",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Добавляет новое фото для конкретного животного",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AnimalPhotos"
+                ],
+                "summary": "Добавить фото животного",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID животного",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "данные фото",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalPhotoInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalPhoto"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to add photo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/animals/{id}/photos/{photo_id}/main": {
+            "patch": {
+                "description": "Устанавливает фото как главное для животного",
+                "tags": [
+                    "AnimalPhotos"
+                ],
+                "summary": "Сделать фото главным",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID животного",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID фото",
+                        "name": "photo_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Photo not available",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "consumes": [
@@ -209,6 +358,41 @@
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/photos/{photo_id}": {
+            "delete": {
+                "description": "Удаляет фото по ID",
+                "tags": [
+                    "AnimalPhotos"
+                ],
+                "summary": "Удалить фото",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID фото",
+                        "name": "photo_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete photo",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -634,6 +818,40 @@
                 },
                 "type": {
                     "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.AnimalType"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.AnimalPhoto": {
+            "type": "object",
+            "properties": {
+                "animal_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_main": {
+                    "type": "boolean"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.AnimalPhotoInput": {
+            "type": "object",
+            "properties": {
+                "animal_id": {
+                    "type": "integer"
+                },
+                "is_main": {
+                    "type": "boolean"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },

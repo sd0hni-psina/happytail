@@ -17,8 +17,20 @@ func NewAnimalPhotoHandler(svc AnimalPhotoService) *AnimalPhotoHandler {
 	return &AnimalPhotoHandler{svc: svc}
 }
 
+// AddPhoto godoc
+// @Summary Добавить фото животного
+// @Description Добавляет новое фото для конкретного животного
+// @Tags AnimalPhotos
+// @Accept json
+// @Produce json
+// @Param id path int true "ID животного"
+// @Param input body models.AnimalPhotoInput true "данные фото"
+// @Success 201 {object} models.AnimalPhoto
+// @Failure 400 {string} string "Invalid input"
+// @Failure 500 {string} string "Failed to add photo"
+// @Router /animals/{id}/photos [post]
 func (h *AnimalPhotoHandler) AddPhoto(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("animal_id")
+	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
@@ -27,6 +39,10 @@ func (h *AnimalPhotoHandler) AddPhoto(w http.ResponseWriter, r *http.Request) {
 	var input models.AnimalPhotoInput
 
 	err = json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 	input.AnimalID = id
 
 	photo, err := h.svc.AddPhoto(r.Context(), input)
@@ -39,10 +55,77 @@ func (h *AnimalPhotoHandler) AddPhoto(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(photo)
 }
 
-func (h *AnimalPhotoHandler) DeletePhoto(w http.ResponseWriter, r *http.Request) {}
+// DeletePhoto godoc
+// @Summary Удалить фото
+// @Description Удаляет фото по ID
+// @Tags AnimalPhotos
+// @Param photo_id path int true "ID фото"
+// @Success 204 "No Content"
+// @Failure 400 {string} string "Invalid id"
+// @Failure 500 {string} string "Failed to delete photo"
+// @Router /photos/{photo_id} [delete]
+func (h *AnimalPhotoHandler) DeletePhoto(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("photo_id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid id", http.StatusBadRequest)
+		return
+	}
+	err = h.svc.DeletePhoto(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Failed to delete photo", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
-func (h *AnimalPhotoHandler) MakeMainPhoto(w http.ResponseWriter, r *http.Request) {}
+// MakeMainPhoto godoc
+// @Summary Сделать фото главным
+// @Description Устанавливает фото как главное для животного
+// @Tags AnimalPhotos
+// @Param id path int true "ID животного"
+// @Param photo_id path int true "ID фото"
+// @Success 204 "No Content"
+// @Failure 400 {string} string "Invalid id"
+// @Failure 404 {string} string "Photo not available"
+// @Failure 500 {string} string "Internal error"
+// @Router /animals/{id}/photos/{photo_id}/main [patch]
+func (h *AnimalPhotoHandler) MakeMainPhoto(w http.ResponseWriter, r *http.Request) {
+	animalIDStr := r.PathValue("id")
+	animalID, err := strconv.Atoi(animalIDStr)
+	if err != nil {
+		http.Error(w, "Invalid animal id", http.StatusBadRequest)
+		return
+	}
+	photoIDStr := r.PathValue("photo_id")
+	photoID, err := strconv.Atoi(photoIDStr)
+	if err != nil {
+		http.Error(w, "Invalid photo id", http.StatusBadRequest)
+		return
+	}
+	err = h.svc.MakeMainPhoto(r.Context(), animalID, photoID)
+	if err != nil {
+		if errors.Is(err, models.ErrNotAvailable) {
+			http.Error(w, "Photo not available", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to update photo", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
+// GetAllPhotos godoc
+// @Summary Получить все фото животного
+// @Description Возвращает список фото для конкретного животного (главное фото первым)
+// @Tags AnimalPhotos
+// @Produce json
+// @Param id path int true "ID животного"
+// @Success 200 {array} models.AnimalPhoto
+// @Failure 400 {string} string "Invalid id"
+// @Failure 404 {string} string "Not found"
+// @Failure 500 {string} string "Failed to fetch photos"
+// @Router /animals/{id}/photos [get]
 func (h *AnimalPhotoHandler) GetAllPhotos(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)

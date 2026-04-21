@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
 
@@ -24,7 +25,7 @@ func NewPostHandler(svc PostService) *PostHandler {
 // @Produce json
 // @Success 200 {array} models.Post
 // @Failure 500 {string} string "Failed to fetch posts"
-// @Router /posts [get]
+// @Router /post [get]
 func (h *PostHandler) GetAllPost(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.svc.GetAllPost(r.Context())
 	if err != nil {
@@ -80,6 +81,11 @@ func (h *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Failed to create post"
 // @Router /post [post]
 func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	var input models.CreatePostInput
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -87,6 +93,7 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+	input.UserID = userID
 
 	if err := input.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

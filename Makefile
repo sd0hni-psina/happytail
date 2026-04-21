@@ -16,7 +16,7 @@ env-down:
 env-cleanup:
 	@read -p "Очистить все volume файлы окружения ? Потеря данных. (y/n) " ans; \
 	if [ "$$ans" = "y" ]; then \
-		docker compose down down happytail-postgres && \
+		docker compose down happytail-postgres && \
 		rm -rf out/pgdata && \
 		echo "Database volume removed."; \
 	else \

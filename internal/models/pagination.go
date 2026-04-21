@@ -19,8 +19,8 @@ type PaginationMeta struct {
 }
 
 type PaginationParams struct {
-	Page  int
-	Limit int
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
 }
 
 type PaginatedResponse[T any] struct {

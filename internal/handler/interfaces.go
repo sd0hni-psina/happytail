@@ -41,3 +41,9 @@ type AnimalPhotoService interface {
 	MakeMainPhoto(ctx context.Context, animalID, photoID int) error
 	GetAllPhotos(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)
 }
+
+type RoleService interface {
+	AppointRole(ctx context.Context, input models.RoleInput) (*models.Role, error)
+	RemoveRole(ctx context.Context, roleID int) error
+	HasRole(ctx context.Context, userID int, role models.RoleType, shelterID *int) (bool, error)
+}

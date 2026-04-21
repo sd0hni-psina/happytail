@@ -39,7 +39,7 @@ type Money struct {
 }
 
 type Post struct {
-	ID          int         `json:"id"`
+	ID          int         `json:"-"`
 	UserID      int         `json:"user_id"`
 	AnimalID    int         `json:"animal_id"`
 	ListingType ListingType `json:"listing_type"`
@@ -53,13 +53,13 @@ type Post struct {
 }
 
 type CreatePostInput struct {
-	UserID      int
-	AnimalID    int
-	ListingType ListingType
-	Price       *Money
-	Reason      *string
-	PhotoURLs   []string
-	ContactInfo string
+	UserID      int         `json:"-"`
+	AnimalID    int         `json:"animal_id"`
+	ListingType ListingType `json:"listing_type"`
+	Price       *Money      `json:"price"`
+	Reason      *string     `json:"reason"`
+	PhotoURLs   []string    `json:"photo_urls"`
+	ContactInfo string      `json:"contact_info"`
 }
 
 func (cpi *CreatePostInput) Validate() error {

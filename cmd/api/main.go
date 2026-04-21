@@ -14,6 +14,7 @@ import (
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
 	"github.com/sd0hni-psina/happytail/internal/middleware"
+	"github.com/sd0hni-psina/happytail/internal/models"
 	"github.com/sd0hni-psina/happytail/internal/repository"
 	"github.com/sd0hni-psina/happytail/internal/service"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -91,6 +92,12 @@ func main() {
 	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(http.HandlerFunc(photoHandler.DeletePhoto)))
 	mux.Handle("PATCH /animals/{id}/photos/{photo_id}/main", authMiddleware(http.HandlerFunc(photoHandler.MakeMainPhoto)))
 	mux.HandleFunc("GET /animals/{id}/photos", photoHandler.GetAllPhotos)
+	// ROLE HANDLERS
+	roleRepo := repository.NewRoleRepository(pool)
+	roleSvc := service.NewRoleService(roleRepo)
+	roleHandler := handler.NewRoleHandler(roleSvc)
+	mux.Handle("POST /roles", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.AppointRole))))
+	mux.Handle("DELETE /roles/{id}", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.RemoveRole))))
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

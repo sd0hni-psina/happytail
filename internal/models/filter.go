@@ -6,12 +6,12 @@ import (
 )
 
 type FilterParams struct {
-	Type           *string
-	Breed          *string
-	Color          *string
-	IsVaccinated   *bool
-	HasVetPassport *bool
-	Status         *string
+	Type           *string `json:"type"`
+	Breed          *string `json:"breed"`
+	Color          *string `json:"color"`
+	IsVaccinated   *bool   `json:"is_vaccinated"`
+	HasVetPassport *bool   `json:"has_vet_passport"`
+	Status         *string `json:"status"`
 }
 
 func ParseFilter(r *http.Request) FilterParams {

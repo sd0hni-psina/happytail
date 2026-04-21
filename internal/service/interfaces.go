@@ -41,3 +41,9 @@ type AnimalPhotoRepository interface {
 	MakeMain(ctx context.Context, animalID, photoID int) error
 	GetAll(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)
 }
+
+type RoleRepository interface {
+	Appoint(ctx context.Context, input models.RoleInput) (*models.Role, error)
+	Remove(ctx context.Context, roleID int) error
+	HasRole(ctx context.Context, userID int, role models.RoleType, shelterID *int) (bool, error)
+}

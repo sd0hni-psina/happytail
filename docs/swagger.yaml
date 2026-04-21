@@ -107,13 +107,13 @@ definitions:
     type: object
   github_com_sd0hni-psina_happytail_internal_models.CreatePostInput:
     properties:
-      animalID:
+      animal_id:
         type: integer
-      contactInfo:
+      contact_info:
         type: string
-      listingType:
+      listing_type:
         $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType'
-      photoURLs:
+      photo_urls:
         items:
           type: string
         type: array
@@ -121,8 +121,6 @@ definitions:
         $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Money'
       reason:
         type: string
-      userID:
-        type: integer
     type: object
   github_com_sd0hni-psina_happytail_internal_models.CreateShelterInput:
     properties:
@@ -178,8 +176,6 @@ definitions:
         type: string
       created_at:
         type: string
-      id:
-        type: integer
       listing_type:
         $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType'
       photo_urls:
@@ -207,6 +203,36 @@ definitions:
     - PostStatusActive
     - PostStatusInactive
     - PostStatusDeleted
+  github_com_sd0hni-psina_happytail_internal_models.Role:
+    properties:
+      id:
+        type: integer
+      role_type:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.RoleType'
+      shelter_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.RoleInput:
+    properties:
+      role_type:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.RoleType'
+      shelter_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.RoleType:
+    enum:
+    - admin
+    - shelter_admin
+    - user
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleShelterAdmin
+    - RoleUser
   github_com_sd0hni-psina_happytail_internal_models.Shelter:
     properties:
       address:
@@ -500,6 +526,24 @@ paths:
       tags:
       - AnimalPhotos
   /post:
+    get:
+      description: Возвращает список всех постов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post'
+            type: array
+        "500":
+          description: Failed to fetch posts
+          schema:
+            type: string
+      summary: Получить все посты
+      tags:
+      - Post
     post:
       consumes:
       - application/json
@@ -566,25 +610,63 @@ paths:
       summary: Получить пост по ID
       tags:
       - Post
-  /posts:
-    get:
-      description: Возвращает список всех постов
+  /roles:
+    post:
+      consumes:
+      - application/json
+      description: Назначает роль пользователю (например admin, moderator)
+      parameters:
+      - description: данные для назначения роли
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.RoleInput'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            items:
-              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post'
-            type: array
-        "500":
-          description: Failed to fetch posts
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Role'
+        "400":
+          description: Invalid input
           schema:
             type: string
-      summary: Получить все посты
+        "500":
+          description: Cannot appoint role
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Назначить роль пользователю
       tags:
-      - Post
+      - Roles
+  /roles/{id}:
+    delete:
+      description: Удаляет роль по ID
+      parameters:
+      - description: ID роли
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid id
+          schema:
+            type: string
+        "500":
+          description: Failed to remove role
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить роль
+      tags:
+      - Roles
   /shelters:
     get:
       consumes:

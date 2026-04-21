@@ -405,6 +405,33 @@ const docTemplate = `{
             }
         },
         "/post": {
+            "get": {
+                "description": "Возвращает список всех постов",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Post"
+                ],
+                "summary": "Получить все посты",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch posts",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -508,28 +535,90 @@ const docTemplate = `{
                 }
             }
         },
-        "/posts": {
-            "get": {
-                "description": "Возвращает список всех постов",
+        "/roles": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Назначает роль пользователю (например admin, moderator)",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Post"
+                    "Roles"
                 ],
-                "summary": "Получить все посты",
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                "summary": "Назначить роль пользователю",
+                "parameters": [
+                    {
+                        "description": "данные для назначения роли",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Post"
-                            }
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.RoleInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.Role"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Failed to fetch posts",
+                        "description": "Cannot appoint role",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет роль по ID",
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Удалить роль",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID роли",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to remove role",
                         "schema": {
                             "type": "string"
                         }
@@ -925,16 +1014,16 @@ const docTemplate = `{
         "github_com_sd0hni-psina_happytail_internal_models.CreatePostInput": {
             "type": "object",
             "properties": {
-                "animalID": {
+                "animal_id": {
                     "type": "integer"
                 },
-                "contactInfo": {
+                "contact_info": {
                     "type": "string"
                 },
-                "listingType": {
+                "listing_type": {
                     "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType"
                 },
-                "photoURLs": {
+                "photo_urls": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -945,9 +1034,6 @@ const docTemplate = `{
                 },
                 "reason": {
                     "type": "string"
-                },
-                "userID": {
-                    "type": "integer"
                 }
             }
         },
@@ -1033,9 +1119,6 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "listing_type": {
                     "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.ListingType"
                 },
@@ -1073,6 +1156,50 @@ const docTemplate = `{
                 "PostStatusActive",
                 "PostStatusInactive",
                 "PostStatusDeleted"
+            ]
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.Role": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "role_type": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.RoleType"
+                },
+                "shelter_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.RoleInput": {
+            "type": "object",
+            "properties": {
+                "role_type": {
+                    "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.RoleType"
+                },
+                "shelter_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.RoleType": {
+            "type": "string",
+            "enum": [
+                "admin",
+                "shelter_admin",
+                "user"
+            ],
+            "x-enum-varnames": [
+                "RoleAdmin",
+                "RoleShelterAdmin",
+                "RoleUser"
             ]
         },
         "github_com_sd0hni-psina_happytail_internal_models.Shelter": {

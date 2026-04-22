@@ -20,7 +20,7 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{pool: pool}
 }
 
-func (r *UserRepository) GetAll(ctx context.Context) ([]models.User, error) {
+func (r *UserRepository) GetAll(ctx context.Context) ([]models.UserPublic, error) {
 	query := `SELECT id, full_name, email, phone_number, city, points, password_hash, created_at FROM users`
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
@@ -28,10 +28,10 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]models.User, error) {
 	}
 	defer rows.Close()
 
-	var users []models.User
+	var users []models.UserPublic
 	for rows.Next() {
-		u := models.User{}
-		err := rows.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.PasswordHash, &u.CreatedAt)
+		u := models.UserPublic{}
+		err := rows.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -40,13 +40,13 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]models.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id int) (*models.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, id int) (*models.UserPublic, error) {
 	query := `SELECT id, full_name, email, phone_number, city, points, password_hash, created_at 
 FROM users WHERE id = $1`
 	row := r.pool.QueryRow(ctx, query, id)
 
-	u := models.User{}
-	err := row.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.PasswordHash, &u.CreatedAt)
+	u := models.UserPublic{}
+	err := row.Scan(&u.ID, &u.FullName, &u.Email, &u.PhoneNumber, &u.City, &u.Points, &u.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, models.ErrNotFound

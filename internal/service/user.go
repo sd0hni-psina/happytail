@@ -15,11 +15,11 @@ func NewUserService(repo UserRepository, jwtSecret string) *UserService {
 	return &UserService{repo: repo, jwtSecret: jwtSecret}
 }
 
-func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, error) {
+func (s *UserService) GetAllUsers(ctx context.Context) ([]models.UserPublic, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *UserService) GetUserByID(ctx context.Context, id int) (*models.User, error) {
+func (s *UserService) GetUserByID(ctx context.Context, id int) (*models.UserPublic, error) {
 	return s.repo.GetByID(ctx, id)
 }
 

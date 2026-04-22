@@ -19,8 +19,8 @@ type ShelterService interface {
 }
 
 type UserService interface {
-	GetAllUsers(ctx context.Context) ([]models.User, error)
-	GetUserByID(ctx context.Context, id int) (*models.User, error)
+	GetAllUsers(ctx context.Context) ([]models.UserPublic, error)
+	GetUserByID(ctx context.Context, id int) (*models.UserPublic, error)
 	CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
 }

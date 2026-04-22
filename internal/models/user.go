@@ -31,6 +31,16 @@ type CreateUserInput struct {
 	City        *string `json:"city"`
 }
 
+type UserPublic struct {
+	ID          int       `json:"id"`
+	FullName    string    `json:"full_name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	City        *string   `json:"city"`
+	Points      int       `json:"points"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -74,4 +84,16 @@ func (cui *CreateUserInput) Validate() error {
 		return errors.New(strings.Join(msgs, ", "))
 	}
 	return nil
+}
+
+func (u *User) ToPublic() UserPublic {
+	return UserPublic{
+		ID:          u.ID,
+		FullName:    u.FullName,
+		Email:       u.Email,
+		PhoneNumber: u.PhoneNumber,
+		City:        u.City,
+		Points:      u.Points,
+		CreatedAt:   u.CreatedAt,
+	}
 }

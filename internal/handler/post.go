@@ -25,7 +25,7 @@ func NewPostHandler(svc PostService) *PostHandler {
 // @Produce json
 // @Success 200 {array} models.Post
 // @Failure 500 {string} string "Failed to fetch posts"
-// @Router /post [get]
+// @Router /posts [get]
 func (h *PostHandler) GetAllPost(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.svc.GetAllPost(r.Context())
 	if err != nil {
@@ -46,7 +46,7 @@ func (h *PostHandler) GetAllPost(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid post ID"
 // @Failure 404 {string} string "Post not found"
 // @Failure 500 {string} string "Failed to fetch post"
-// @Router /post/{id} [get]
+// @Router /posts/{id} [get]
 func (h *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -79,7 +79,7 @@ func (h *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid input"
 // @Failure 409 {string} string "Conflict"
 // @Failure 500 {string} string "Failed to create post"
-// @Router /post [post]
+// @Router /posts [post]
 func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {

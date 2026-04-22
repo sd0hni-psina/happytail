@@ -86,9 +86,9 @@ func main() {
 	postRepo := repository.NewPostRepository(pool)
 	postSvc := service.NewPostService(postRepo)
 	postHandler := handler.NewPostHandler(postSvc)
-	mux.HandleFunc("GET /post", postHandler.GetAllPost)
-	mux.HandleFunc("GET /post/{id}", postHandler.GetPostByID)
-	mux.Handle("POST /post", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
+	mux.HandleFunc("GET /posts", postHandler.GetAllPost)
+	mux.HandleFunc("GET /posts/{id}", postHandler.GetPostByID)
+	mux.Handle("POST /posts", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
 	// PHOTOS HANDLERS
 	photoRepo := repository.NewAnimalPhotoRepository(pool)
 	photoSvc := service.NewAnimalPhotoService(photoRepo)

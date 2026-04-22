@@ -1,0 +1,11 @@
+DROP INDEX IF EXISTS idx_animals_status;
+DROP INDEX IF EXISTS idx_animals_type;
+DROP INDEX IF EXISTS idx_animals_shelter_id;
+DROP INDEX IF EXISTS idx_animal_photos_animal_id;
+DROP INDEX IF EXISTS idx_adoptions_user_id;
+DROP INDEX IF EXISTS idx_adoptions_animal_id;
+DROP INDEX IF EXISTS idx_posts_user_id;
+DROP INDEX IF EXISTS idx_posts_animal_id;
+DROP INDEX IF EXISTS idx_posts_status;
+DROP INDEX IF EXISTS idx_user_roles_user_id;
+DROP INDEX IF EXISTS idx_users_email;

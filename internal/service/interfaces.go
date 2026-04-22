@@ -19,8 +19,8 @@ type ShelterRepository interface {
 }
 
 type UserRepository interface {
-	GetAll(ctx context.Context) ([]models.User, error)
-	GetByID(ctx context.Context, id int) (*models.User, error)
+	GetAll(ctx context.Context) ([]models.UserPublic, error)
+	GetByID(ctx context.Context, id int) (*models.UserPublic, error)
 	Create(ctx context.Context, input models.CreateUserInput) (*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 }

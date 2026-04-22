@@ -17,7 +17,7 @@ func (m *mockAnimalRepo) GetByID(ctx context.Context, id int) (*models.Animal, e
 	return m.animal, m.err
 }
 
-func (m *mockAnimalRepo) GetAll(ctx context.Context, limit, ofser int) ([]models.Animal, int, error) {
+func (m *mockAnimalRepo) GetAll(ctx context.Context, limit, ofser int, filter models.FilterParams) ([]models.Animal, int, error) {
 	return nil, 0, nil
 }
 
@@ -25,7 +25,7 @@ func (m *mockAnimalRepo) Create(ctx context.Context, input models.CreateAnimalIn
 	return m.animal, m.err
 }
 
-func TestGetAnimalByID(t *testing.T) {
+func TestGetAnimalByID_NotFound(t *testing.T) {
 	repo := &mockAnimalRepo{
 		animal: nil,
 		err:    models.ErrNotFound,
@@ -42,23 +42,60 @@ func TestGetAnimalByID(t *testing.T) {
 	}
 }
 
-func TestCreateAnimal(t *testing.T) {
-	var input models.CreateAnimalInput
-	repo := &mockAnimalRepo{
-		animal: &models.Animal{
-			Name: "Murzik",
-			Type: "Cat",
-		},
-		err: nil,
-	}
+func TestGetAnimalByID_Success(t *testing.T) {
+	expected := &models.Animal{ID: 42, Name: "Murzik"}
+	repo := &mockAnimalRepo{animal: expected, err: nil}
 	svc := NewAnimalService(repo)
+
+	animal, err := svc.GetAnimalByID(context.Background(), 42)
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if animal == nil {
+		t.Fatal("expected animal, got nil")
+	}
+	if animal.ID != expected.ID {
+		t.Errorf("expected ID %d, got %d", expected.ID, animal.ID)
+	}
+	if animal.Name != expected.Name {
+		t.Errorf("expected name %s, got %s", expected.Name, animal.Name)
+	}
+}
+
+func TestCreateAnimal_Succes(t *testing.T) {
+	expected := &models.Animal{ID: 1, Name: "Barsik"}
+	repo := &mockAnimalRepo{animal: expected, err: nil}
+	svc := NewAnimalService(repo)
+
+	input := models.CreateAnimalInput{Name: "Barsik", Type: models.AnimalTypeCat}
 
 	animal, err := svc.CreateAnimal(context.Background(), input)
 
 	if err != nil {
-		t.Errorf("expected nil error, got %v", err)
+		t.Errorf("expected no error, got %v", err)
 	}
 	if animal == nil {
-		t.Errorf("expected animal, got nil")
+		t.Fatal("expected animal, got nil")
+	}
+	if animal.Name != expected.Name {
+		t.Errorf("expected name %s, got %s", expected.Name, animal.Name)
+	}
+}
+
+func TestCreateAnimal_RepoError(t *testing.T) {
+	repoErr := errors.New("database unavailable")
+	repo := &mockAnimalRepo{animal: nil, err: repoErr}
+	svc := NewAnimalService(repo)
+
+	input := models.CreateAnimalInput{Name: "Barsik", Type: models.AnimalTypeCat}
+
+	animal, err := svc.CreateAnimal(context.Background(), input)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+	if animal != nil {
+		t.Errorf("expected nil animal on error, got %v", animal)
 	}
 }

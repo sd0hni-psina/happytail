@@ -52,5 +52,12 @@ migrate-action:
 		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@happytail-postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		"$(action)"
 
+test:
+	@go test ./internal/... -v
+
+test-cover:
+	@go test ./internal/... -coverprofile=coverage.out
+	@go tool cover -html=coverage.out
+
 dev:
 	docker compose up --build happytail-api

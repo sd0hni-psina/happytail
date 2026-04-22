@@ -102,10 +102,18 @@ func main() {
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)
 
+	rateLimiter := middleware.NewRateLimite(10, 30)
 	srv := &http.Server{
-		Addr:    ":" + cfg.AppPort,
-		Handler: middleware.Logger(middleware.Recovery(mux)),
+		Addr: ":" + cfg.AppPort,
+		Handler: middleware.Logger(
+			middleware.Recovery(
+				middleware.CORS(
+					rateLimiter.Middleware(mux),
+				),
+			),
+		),
 	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 

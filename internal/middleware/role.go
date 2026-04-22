@@ -8,6 +8,10 @@ import (
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
 
+type AnimalShelterGetter interface {
+	GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error)
+}
+
 type RoleChecker interface {
 	HasRole(ctx context.Context, userID int, role models.RoleType, shelterID *int) (bool, error)
 }

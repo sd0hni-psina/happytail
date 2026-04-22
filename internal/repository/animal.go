@@ -119,3 +119,16 @@ func (r *AnimalRepository) Create(ctx context.Context, input models.CreateAnimal
 	}
 	return &a, nil
 }
+
+func (r *AnimalRepository) GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error) {
+	query := `SELECT shelter_id FROM animals WHERE id = $1`
+	var id *int
+	err := r.pool.QueryRow(ctx, query, animalID).Scan(&id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+	return id, nil
+}

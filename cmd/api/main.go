@@ -13,6 +13,7 @@ import (
 	_ "github.com/sd0hni-psina/happytail/docs"
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
+	"github.com/sd0hni-psina/happytail/internal/logger"
 	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/models"
 	"github.com/sd0hni-psina/happytail/internal/repository"
@@ -40,6 +41,10 @@ func main() {
 		PostgresPort:     os.Getenv("POSTGRES_PORT"),
 		JWTSecret:        os.Getenv("JWT_SECRET"),
 	}
+
+	appEnv := os.Getenv("APP_ENV")
+	log := logger.New(appEnv)
+
 	mux.HandleFunc("/health", handler.HealthHandler)
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 	pool, err := cfg.ConnectDB()
@@ -105,7 +110,7 @@ func main() {
 	rateLimiter := middleware.NewRateLimite(10, 30)
 	srv := &http.Server{
 		Addr: ":" + cfg.AppPort,
-		Handler: middleware.Logger(
+		Handler: middleware.Logger(log)(
 			middleware.Recovery(
 				middleware.CORS(
 					rateLimiter.Middleware(mux),

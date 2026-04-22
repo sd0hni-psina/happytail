@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -126,7 +126,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.svc.Login(r.Context(), input.Email, input.Password)
 	if err != nil {
-		log.Printf("Login error: %v", err)
+		slog.Warn("login failed", "error", err)
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}

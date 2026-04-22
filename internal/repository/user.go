@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -51,7 +51,7 @@ FROM users WHERE id = $1`
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, models.ErrNotFound
 		}
-		log.Printf("GetByID error: %v", err)
+		slog.Error("failed to get user by id", "error", err, "user_id", id)
 		return nil, err
 	}
 	return &u, nil

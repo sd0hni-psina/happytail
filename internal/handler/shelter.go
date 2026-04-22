@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -91,7 +91,7 @@ func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 
 	shelter, err := h.svc.CreateShelter(r.Context(), input)
 	if err != nil {
-		log.Printf("CreateShelter error: %v", err)
+		slog.Error("failed to create shelter", "error", err)
 		if errors.Is(err, models.ErrConflict) {
 			http.Error(w, "Shelter with the same name or email already exists", http.StatusConflict)
 			return

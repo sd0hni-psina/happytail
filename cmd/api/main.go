@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	_ "github.com/sd0hni-psina/happytail/docs"
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
@@ -50,6 +51,8 @@ func main() {
 
 	mux.HandleFunc("/health", handler.HealthHandler)
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+	mux.Handle("GET /metrics", promhttp.Handler())
+
 	pool, err := cfg.ConnectDB()
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database: %v", err))
@@ -120,7 +123,9 @@ func main() {
 		Handler: middleware.Logger(log)(
 			middleware.Recovery(
 				middleware.CORS(
-					rateLimiter.Middleware(mux),
+					middleware.Metrics(
+						rateLimiter.Middleware(mux),
+					),
 				),
 			),
 		),

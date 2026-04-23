@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
@@ -46,4 +47,11 @@ type RoleRepository interface {
 	Appoint(ctx context.Context, input models.RoleInput) (*models.Role, error)
 	Remove(ctx context.Context, roleID int) error
 	HasRole(ctx context.Context, userID int, role models.RoleType, shelterID *int) (bool, error)
+}
+
+type RefreshTokenRepository interface {
+	Create(ctx context.Context, userID int, token string, expiresAt time.Time) error
+	GetByToken(ctx context.Context, token string) (*models.RefreshToken, error)
+	Revoke(ctx context.Context, token string) error
+	RevokeAllForUser(ctx context.Context, userID int) error
 }

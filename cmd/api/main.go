@@ -71,13 +71,16 @@ func main() {
 	mux.Handle("POST /shelters", authMiddleware(http.HandlerFunc(shelterHandler.CreateShelter)))
 	// USERS HANDLERS
 	userRepo := repository.NewUserRepository(pool)
-	userSvc := service.NewUserService(userRepo, cfg.JWTSecret)
+	tokenRepo := repository.NewRefreshTokenRepository(pool)
+	userSvc := service.NewUserService(userRepo, tokenRepo, cfg.JWTSecret)
 	userHandler := handler.NewUserHandler(userSvc)
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetUserByID)
 	mux.HandleFunc("POST /users", userHandler.CreateUser)
 	mux.HandleFunc("POST /auth/login", userHandler.Login)
 	mux.Handle("GET /users/me", authMiddleware(http.HandlerFunc(userHandler.GetMe)))
+	mux.HandleFunc("POST /auth/refresh", userHandler.Refresh)
+	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(userHandler.Logout)))
 	// ADOPTIONS HANDLERS
 	adoptionRepo := repository.NewAdoptionRepository(pool)
 	adoptionSvc := service.NewAdoptionService(adoptionRepo)

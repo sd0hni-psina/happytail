@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -10,35 +12,93 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func generateToken(user *models.User, secret string) (string, error) {
+func generateAccessToken(user *models.User, secret string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     time.Now().Add(15 * time.Minute).Unix(),
 	})
-	tokenString, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
+	return token.SignedString([]byte(secret))
 }
 
-func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {
+func generateRefreshToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+func (s *UserService) Login(ctx context.Context, email, password string) (*models.AuthResponse, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
-	if err != nil {
-		return "", fmt.Errorf("invalid credentials")
-	}
-	if user == nil {
-		return "", fmt.Errorf("invalid credentials")
+	if err != nil || user == nil {
+		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-	if err != nil {
-		return "", fmt.Errorf("invalid credentials")
+	if err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return nil, fmt.Errorf("Invalid credentials")
 	}
 
-	token, err := generateToken(user, s.jwtSecret)
+	accessToken, err := generateAccessToken(user, s.jwtSecret)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate token")
+		return nil, fmt.Errorf("failed to generate access token")
 	}
-	return token, nil
+
+	refreshToken, err := generateRefreshToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token")
+	}
+
+	expiresAt := time.Now().Add(30 * 24 * time.Hour)
+	if err = s.tokenRepo.Create(ctx, user.ID, refreshToken, expiresAt); err != nil {
+		return nil, fmt.Errorf("failed to save refresh token")
+	}
+	return &models.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *UserService) Refresh(ctx context.Context, refreshToken string) (*models.AuthResponse, error) {
+	rt, err := s.tokenRepo.GetByToken(ctx, refreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("invalid refresher token")
+	}
+	if rt.Revoked {
+		return nil, fmt.Errorf("refresh token revoked")
+	}
+	if time.Now().After(rt.ExpiresAt) {
+		return nil, fmt.Errorf("refresh token expired")
+	}
+
+	user, err := s.repo.GetByID(ctx, rt.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+	if err = s.tokenRepo.Revoke(ctx, refreshToken); err != nil {
+		return nil, fmt.Errorf("failed to revoke token")
+	}
+
+	accessToken, err := generateAccessToken(&models.User{ID: user.ID}, s.jwtSecret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token")
+	}
+
+	newRefreshToken, err := generateRefreshToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token")
+	}
+
+	expireAt := time.Now().Add(30 * 24 * time.Hour)
+	if err = s.tokenRepo.Create(ctx, user.ID, newRefreshToken, expireAt); err != nil {
+		return nil, fmt.Errorf("failed to save refresh token")
+	}
+
+	return &models.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *UserService) Logout(ctx context.Context, refreshToken string) error {
+	return s.tokenRepo.Revoke(ctx, refreshToken)
 }

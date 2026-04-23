@@ -76,7 +76,9 @@ definitions:
     - AnimalTypeBunny
   github_com_sd0hni-psina_happytail_internal_models.AuthResponse:
     properties:
-      token:
+      access_token:
+        type: string
+      refresh_token:
         type: string
     type: object
   github_com_sd0hni-psina_happytail_internal_models.CreateAdoptionInput:
@@ -203,6 +205,11 @@ definitions:
     - PostStatusActive
     - PostStatusInactive
     - PostStatusDeleted
+  github_com_sd0hni-psina_happytail_internal_models.RefreshInput:
+    properties:
+      refresh_token:
+        type: string
+    type: object
   github_com_sd0hni-psina_happytail_internal_models.Role:
     properties:
       id:
@@ -517,6 +524,54 @@ paths:
               type: string
             type: object
       summary: Логин пользователя
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: refresh token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.RefreshInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Выход из системы
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: refresh token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.RefreshInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.AuthResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить access token
       tags:
       - auth
   /photos/{photo_id}:

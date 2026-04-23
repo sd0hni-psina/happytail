@@ -22,7 +22,9 @@ type UserService interface {
 	GetAllUsers(ctx context.Context) ([]models.UserPublic, error)
 	GetUserByID(ctx context.Context, id int) (*models.UserPublic, error)
 	CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error)
-	Login(ctx context.Context, email, password string) (string, error)
+	Login(ctx context.Context, email, password string) (*models.AuthResponse, error)
+	Refresh(ctx context.Context, refreshToken string) (*models.AuthResponse, error)
+	Logout(ctx context.Context, refreshToken string) error
 }
 
 type AdoptionService interface {

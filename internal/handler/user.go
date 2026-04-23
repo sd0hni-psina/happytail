@@ -154,12 +154,66 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.svc.Login(r.Context(), input.Email, input.Password)
+	auth, err := h.svc.Login(r.Context(), input.Email, input.Password)
 	if err != nil {
 		slog.Warn("login failed", "error", err)
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	json.NewEncoder(w).Encode(auth)
+}
+
+// Refresh godoc
+// @Summary Обновить access token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body models.RefreshInput true "refresh token"
+// @Success 200 {object} models.AuthResponse
+// @Failure 401 {object} map[string]string
+// @Router /auth/refresh [post]
+func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var input models.RefreshInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if input.RefreshToken == "" {
+		http.Error(w, "Refresh token is required", http.StatusBadRequest)
+		return
+	}
+
+	response, err := h.svc.Refresh(r.Context(), input.RefreshToken)
+	if err != nil {
+		http.Error(w, "Invalid or expired refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// Logout godoc
+// @Summary Выход из системы
+// @Tags auth
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body models.RefreshInput true "refresh token"
+// @Success 204
+// @Router /auth/logout [post]
+func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var input models.RefreshInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.Logout(r.Context(), input.RefreshToken); err != nil {
+		http.Error(w, "Failed to logout", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

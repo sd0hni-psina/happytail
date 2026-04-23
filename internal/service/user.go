@@ -8,11 +8,12 @@ import (
 
 type UserService struct {
 	repo      UserRepository
+	tokenRepo RefreshTokenRepository
 	jwtSecret string
 }
 
-func NewUserService(repo UserRepository, jwtSecret string) *UserService {
-	return &UserService{repo: repo, jwtSecret: jwtSecret}
+func NewUserService(repo UserRepository, tokenRepo RefreshTokenRepository, jwtSecret string) *UserService {
+	return &UserService{repo: repo, tokenRepo: tokenRepo, jwtSecret: jwtSecret}
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context) ([]models.UserPublic, error) {

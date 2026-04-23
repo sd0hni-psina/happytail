@@ -19,10 +19,6 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
-type AuthResponse struct {
-	Token string `json:"token"`
-}
-
 type CreateUserInput struct {
 	FullName    string  `json:"full_name"`
 	Email       string  `json:"email"`

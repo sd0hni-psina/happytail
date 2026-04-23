@@ -404,7 +404,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/post": {
+        "/posts": {
             "get": {
                 "description": "Возвращает список всех постов",
                 "produces": [
@@ -488,7 +488,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/post/{id}": {
+        "/posts/{id}": {
             "get": {
                 "description": "Возвращает один пост по его ID",
                 "produces": [
@@ -800,6 +800,39 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Получить свой профиль",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_sd0hni-psina_happytail_internal_models.UserPublic"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1226,6 +1259,32 @@ const docTemplate = `{
             }
         },
         "github_com_sd0hni-psina_happytail_internal_models.User": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_sd0hni-psina_happytail_internal_models.UserPublic": {
             "type": "object",
             "properties": {
                 "city": {

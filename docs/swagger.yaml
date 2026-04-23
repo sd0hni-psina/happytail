@@ -265,6 +265,23 @@ definitions:
       points:
         type: integer
     type: object
+  github_com_sd0hni-psina_happytail_internal_models.UserPublic:
+    properties:
+      city:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      phone_number:
+        type: string
+      points:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -525,7 +542,7 @@ paths:
       summary: Удалить фото
       tags:
       - AnimalPhotos
-  /post:
+  /posts:
     get:
       description: Возвращает список всех постов
       produces:
@@ -579,7 +596,7 @@ paths:
       summary: Создать пост
       tags:
       - Post
-  /post/{id}:
+  /posts/{id}:
     get:
       description: Возвращает один пост по его ID
       parameters:
@@ -809,6 +826,26 @@ paths:
               type: string
             type: object
       summary: Получить пользователя по ID
+      tags:
+      - users
+  /users/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.UserPublic'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить свой профиль
       tags:
       - users
 securityDefinitions:

@@ -77,6 +77,7 @@ func main() {
 	mux.HandleFunc("GET /users/{id}", userHandler.GetUserByID)
 	mux.HandleFunc("POST /users", userHandler.CreateUser)
 	mux.HandleFunc("POST /auth/login", userHandler.Login)
+	mux.Handle("GET /users/me", authMiddleware(http.HandlerFunc(userHandler.GetMe)))
 	// ADOPTIONS HANDLERS
 	adoptionRepo := repository.NewAdoptionRepository(pool)
 	adoptionSvc := service.NewAdoptionService(adoptionRepo)

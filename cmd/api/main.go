@@ -41,6 +41,9 @@ func main() {
 		PostgresPort:     os.Getenv("POSTGRES_PORT"),
 		JWTSecret:        os.Getenv("JWT_SECRET"),
 	}
+	if err := cfg.Validate(); err != nil {
+		panic(err)
+	}
 
 	appEnv := os.Getenv("APP_ENV")
 	log := logger.New(appEnv)

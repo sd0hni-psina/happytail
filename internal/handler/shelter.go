@@ -103,3 +103,62 @@ func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(shelter)
 }
+
+// FindNearby godoc
+// @Summary Найти ближайшие приюты
+// @Tags shelters
+// @Produce json
+// @Param lat query number true "Широта"
+// @Param lon query number true "Долгота"
+// @Param radius query number false "Радиус поиска в км (default: 10, max: 500)"
+// @Success 200 {array} models.ShelterWithDistance
+// @Router /shelters/nearby [get]
+func (h *ShelterHandler) FindNearby(w http.ResponseWriter, r *http.Request) {
+	latStr := r.URL.Query().Get("lat")
+	lonStr := r.URL.Query().Get("lon")
+
+	if latStr == "" || lonStr == "" {
+		http.Error(w, "lat and lon are required", http.StatusBadRequest)
+		return
+	}
+
+	lat, err := strconv.ParseFloat(latStr, 64)
+	if err != nil {
+		http.Error(w, "invalid lat", http.StatusBadRequest)
+		return
+	}
+
+	lon, err := strconv.ParseFloat(lonStr, 64)
+	if err != nil {
+		http.Error(w, "invalid lon", http.StatusBadRequest)
+		return
+	}
+
+	var radius float64
+	if radiusStr := r.URL.Query().Get("radius"); radiusStr != "" {
+		radius, err = strconv.ParseFloat(radiusStr, 64)
+		if err != nil {
+			http.Error(w, "invalid radius", http.StatusBadRequest)
+			return
+		}
+	}
+
+	params := models.NearbyParams{
+		Latitude:  lat,
+		Longitude: lon,
+		RadiusKm:  radius,
+	}
+
+	shelters, err := h.svc.FindNearby(r.Context(), params)
+	if err != nil {
+		slog.Error("failed to find nearby shelters", "error", err)
+		http.Error(w, "Failed to find nearby shelters", http.StatusInternalServerError)
+		return
+	}
+	if shelters == nil {
+		shelters = []models.ShelterWithDistance{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(shelters)
+}

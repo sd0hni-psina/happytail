@@ -25,3 +25,13 @@ func (s *ShelterService) GetShelterByID(ctx context.Context, id int) (*models.Sh
 func (s *ShelterService) CreateShelter(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error) {
 	return s.repo.Create(ctx, input)
 }
+
+func (s *ShelterService) FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error) {
+	if params.RadiusKm <= 0 {
+		params.RadiusKm = 10
+	}
+	if params.RadiusKm > 500 {
+		params.RadiusKm = 500
+	}
+	return s.repo.FindNearby(ctx, params)
+}

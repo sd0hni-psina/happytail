@@ -88,6 +88,7 @@ func main() {
 	shelterRepo := repository.NewShelterRepository(pool)
 	shelterSvc := service.NewShelterService(shelterRepo)
 	shelterHandler := handler.NewShelterHandler(shelterSvc)
+	mux.HandleFunc("GET /shelters/nearby", shelterHandler.FindNearby)
 	mux.HandleFunc("GET /shelters", shelterHandler.GetAllShelters)
 	mux.HandleFunc("GET /shelters/{id}", shelterHandler.GetShelterByID)
 	mux.Handle("POST /shelters", authMiddleware(http.HandlerFunc(shelterHandler.CreateShelter)))

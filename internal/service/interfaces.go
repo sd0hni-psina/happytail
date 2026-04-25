@@ -17,6 +17,7 @@ type ShelterRepository interface {
 	GetAll(ctx context.Context) ([]models.Shelter, error)
 	GetByID(ctx context.Context, id int) (*models.Shelter, error)
 	Create(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error)
+	FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error)
 }
 
 type UserRepository interface {

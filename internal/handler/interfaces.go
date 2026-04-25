@@ -16,6 +16,7 @@ type ShelterService interface {
 	GetAllShelters(ctx context.Context) ([]models.Shelter, error)
 	GetShelterByID(ctx context.Context, id int) (*models.Shelter, error)
 	CreateShelter(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error)
+	FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error)
 }
 
 type UserService interface {

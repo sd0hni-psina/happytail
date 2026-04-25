@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"mime/multipart"
 	"time"
 
 	"github.com/sd0hni-psina/happytail/internal/models"
@@ -59,4 +60,9 @@ type RefreshTokenRepository interface {
 
 type Notifier interface {
 	SendAdoptionConfirmation(toEmail, userName, animalName string) error
+}
+
+type PhotoStorage interface {
+	Upload(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error)
+	Delete(ctx context.Context, objectName string) error
 }

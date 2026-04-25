@@ -14,15 +14,23 @@ type Config struct {
 	PostgresUser     string
 	PostgresPassword string
 	PostgresDB       string
-	AppPort          string
 	PostgresHost     string
 	PostgresPort     string
-	JWTSecret        string
-	SMTPHost         string
-	SMTPPort         string
-	SMTPUsername     string
-	SMTPPassword     string
-	SMTPFrom         string
+
+	AppPort   string
+	JWTSecret string
+
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFrom     string
+
+	MinioEndpoint  string
+	MinioUser      string
+	MinioPassword  string
+	MinioBucket    string
+	MinioPublicURL string
 }
 
 func (c *Config) Validate() error {
@@ -59,6 +67,18 @@ func (c *Config) Validate() error {
 	}
 	if c.SMTPPassword == "" {
 		errs = append(errs, "SMTP_PASSWORD is required")
+	}
+	if c.MinioEndpoint == "" {
+		errs = append(errs, "MINIO_ENDPOINT is required")
+	}
+	if c.MinioUser == "" {
+		errs = append(errs, "MINIO_USER is required")
+	}
+	if c.MinioPassword == "" {
+		errs = append(errs, "MINIO_PASSWORD is required")
+	}
+	if c.MinioBucket == "" {
+		errs = append(errs, "MINIO_BUCKET is required")
 	}
 
 	if len(errs) > 0 {

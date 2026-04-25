@@ -2,19 +2,31 @@ package service
 
 import (
 	"context"
+	"mime/multipart"
 
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
 
 type AnimalPhotoService struct {
-	repo AnimalPhotoRepository
+	repo    AnimalPhotoRepository
+	storage PhotoStorage
 }
 
-func NewAnimalPhotoService(repo AnimalPhotoRepository) *AnimalPhotoService {
-	return &AnimalPhotoService{repo: repo}
+func NewAnimalPhotoService(repo AnimalPhotoRepository, storage PhotoStorage) *AnimalPhotoService {
+	return &AnimalPhotoService{repo: repo, storage: storage}
 }
 
-func (s *AnimalPhotoService) AddPhoto(ctx context.Context, input models.AnimalPhotoInput) (*models.AnimalPhoto, error) {
+func (s *AnimalPhotoService) AddPhoto(ctx context.Context, animalID int, file multipart.File, header *multipart.FileHeader, isMain bool) (*models.AnimalPhoto, error) {
+	url, err := s.storage.Upload(ctx, file, header)
+	if err != nil {
+		return nil, err
+	}
+
+	input := models.AnimalPhotoInput{
+		AnimalID: animalID,
+		URL:      url,
+		IsMain:   isMain,
+	}
 	return s.repo.Add(ctx, input)
 }
 

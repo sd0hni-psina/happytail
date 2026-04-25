@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"mime/multipart"
 
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
@@ -39,7 +40,7 @@ type PostService interface {
 }
 
 type AnimalPhotoService interface {
-	AddPhoto(ctx context.Context, input models.AnimalPhotoInput) (*models.AnimalPhoto, error)
+	AddPhoto(ctx context.Context, animalID int, file multipart.File, header *multipart.FileHeader, isMain bool) (*models.AnimalPhoto, error)
 	DeletePhoto(ctx context.Context, photoID int) error
 	MakeMainPhoto(ctx context.Context, animalID, photoID int) error
 	GetAllPhotos(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)

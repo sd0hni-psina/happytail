@@ -20,6 +20,7 @@ import (
 	"github.com/sd0hni-psina/happytail/internal/notifier"
 	"github.com/sd0hni-psina/happytail/internal/repository"
 	"github.com/sd0hni-psina/happytail/internal/service"
+	"github.com/sd0hni-psina/happytail/internal/storage"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -47,9 +48,24 @@ func main() {
 		SMTPUsername:     os.Getenv("SMTP_USERNAME"),
 		SMTPPassword:     os.Getenv("SMTP_PASSWORD"),
 		SMTPFrom:         os.Getenv("SMTP_FROM"),
+		MinioEndpoint:    os.Getenv("MINIO_ENDPOINT"),
+		MinioUser:        os.Getenv("MINIO_USER"),
+		MinioPassword:    os.Getenv("MINIO_PASSWORD"),
+		MinioBucket:      os.Getenv("MINIO_BUCKET"),
+		MinioPublicURL:   os.Getenv("MINIO_PUBLIC_URL"),
 	}
 	if err := cfg.Validate(); err != nil {
 		panic(err)
+	}
+	minioStorage, err := storage.NewMinioStorage(
+		cfg.MinioEndpoint,
+		cfg.MinioUser,
+		cfg.MinioPassword,
+		cfg.MinioBucket,
+		cfg.MinioPublicURL,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to minio: %v", err))
 	}
 	emailNotifier, err := notifier.NewEmailNotifier(
 		cfg.SMTPHost,
@@ -118,7 +134,7 @@ func main() {
 	mux.Handle("POST /posts", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
 	// PHOTOS HANDLERS
 	photoRepo := repository.NewAnimalPhotoRepository(pool)
-	photoSvc := service.NewAnimalPhotoService(photoRepo)
+	photoSvc := service.NewAnimalPhotoService(photoRepo, minioStorage)
 	photoHandler := handler.NewAnimalPhotoHandler(photoSvc)
 	mux.Handle("POST /animals/{id}/photos", authMiddleware(http.HandlerFunc(photoHandler.AddPhoto)))
 	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(http.HandlerFunc(photoHandler.DeletePhoto)))

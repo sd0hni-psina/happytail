@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/sd0hni-psina/happytail/internal/models"
@@ -36,20 +38,35 @@ func (h *AnimalPhotoHandler) AddPhoto(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
-	var input models.AnimalPhotoInput
 
-	err = json.NewDecoder(r.Body).Decode(&input)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	if err = r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "filte too large", http.StatusBadRequest)
 		return
 	}
-	input.AnimalID = id
 
-	photo, err := h.svc.AddPhoto(r.Context(), input)
+	file, header, err := r.FormFile("photo")
 	if err != nil {
-		http.Error(w, "Failed to add photo", http.StatusBadRequest)
+		http.Error(w, "photo field is required", http.StatusBadRequest)
 		return
 	}
+	defer file.Close()
+
+	ext := filepath.Ext(header.Filename)
+	allowed := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".webp": true}
+	if !allowed[ext] {
+		http.Error(w, "only jpg, png, webp allowed", http.StatusBadRequest)
+		return
+	}
+
+	isMain := r.FormValue("is_main") == "true"
+
+	photo, err := h.svc.AddPhoto(r.Context(), id, file, header, isMain)
+	if err != nil {
+		slog.Error("failed to add photo", "error", err)
+		http.Error(w, "Failed to add photo", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(photo)

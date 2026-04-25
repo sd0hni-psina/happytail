@@ -17,6 +17,7 @@ import (
 	"github.com/sd0hni-psina/happytail/internal/logger"
 	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/models"
+	"github.com/sd0hni-psina/happytail/internal/notifier"
 	"github.com/sd0hni-psina/happytail/internal/repository"
 	"github.com/sd0hni-psina/happytail/internal/service"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -41,9 +42,24 @@ func main() {
 		PostgresHost:     os.Getenv("POSTGRES_HOST"),
 		PostgresPort:     os.Getenv("POSTGRES_PORT"),
 		JWTSecret:        os.Getenv("JWT_SECRET"),
+		SMTPHost:         os.Getenv("SMTP_HOST"),
+		SMTPPort:         os.Getenv("SMTP_PORT"),
+		SMTPUsername:     os.Getenv("SMTP_USERNAME"),
+		SMTPPassword:     os.Getenv("SMTP_PASSWORD"),
+		SMTPFrom:         os.Getenv("SMTP_FROM"),
 	}
 	if err := cfg.Validate(); err != nil {
 		panic(err)
+	}
+	emailNotifier, err := notifier.NewEmailNotifier(
+		cfg.SMTPHost,
+		cfg.SMTPPort,
+		cfg.SMTPUsername,
+		cfg.SMTPPassword,
+		cfg.SMTPFrom,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create email notifier: %v", err))
 	}
 
 	appEnv := os.Getenv("APP_ENV")
@@ -89,7 +105,7 @@ func main() {
 	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(userHandler.Logout)))
 	// ADOPTIONS HANDLERS
 	adoptionRepo := repository.NewAdoptionRepository(pool)
-	adoptionSvc := service.NewAdoptionService(adoptionRepo)
+	adoptionSvc := service.NewAdoptionService(adoptionRepo, userRepo, animalRepo, emailNotifier)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
 	// POSTS HANDLERS

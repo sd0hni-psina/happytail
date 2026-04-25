@@ -55,3 +55,7 @@ type RefreshTokenRepository interface {
 	Revoke(ctx context.Context, token string) error
 	RevokeAllForUser(ctx context.Context, userID int) error
 }
+
+type Notifier interface {
+	SendAdoptionConfirmation(toEmail, userName, animalName string) error
+}

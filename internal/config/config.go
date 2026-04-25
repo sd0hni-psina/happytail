@@ -18,6 +18,11 @@ type Config struct {
 	PostgresHost     string
 	PostgresPort     string
 	JWTSecret        string
+	SMTPHost         string
+	SMTPPort         string
+	SMTPUsername     string
+	SMTPPassword     string
+	SMTPFrom         string
 }
 
 func (c *Config) Validate() error {
@@ -45,6 +50,15 @@ func (c *Config) Validate() error {
 		errs = append(errs, "JWT_SECRET is required")
 	} else if len(c.JWTSecret) < 32 {
 		errs = append(errs, "JWT_SECRET must be at least 32 characters")
+	}
+	if c.SMTPHost == "" {
+		errs = append(errs, "SMTP_HOST is required")
+	}
+	if c.SMTPUsername == "" {
+		errs = append(errs, "SMTP_USERNAME is required")
+	}
+	if c.SMTPPassword == "" {
+		errs = append(errs, "SMTP_PASSWORD is required")
 	}
 
 	if len(errs) > 0 {

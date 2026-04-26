@@ -85,7 +85,7 @@ func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if input.Name == "" || input.Address == "" {
-		http.Error(w, "Name, Address and Email are required", http.StatusBadRequest)
+		http.Error(w, "Name and Address are required", http.StatusBadRequest)
 		return
 	}
 
@@ -114,6 +114,7 @@ func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} models.ShelterWithDistance
 // @Router /shelters/nearby [get]
 func (h *ShelterHandler) FindNearby(w http.ResponseWriter, r *http.Request) {
+	// нет верхней границы валидации на уровне хендлера, пользователь может передать любой радиус
 	latStr := r.URL.Query().Get("lat")
 	lonStr := r.URL.Query().Get("lon")
 

@@ -35,7 +35,7 @@ func (s *AdoptionService) CreateAdoption(ctx context.Context, userID, animalID i
 	if err := s.cache.DeleteByPattern(bgCtx, "animals:page=*"); err != nil {
 		slog.Error("failed to invalidate animals list cache", "error", err)
 	}
-
+	// реализовать очередь задач (outbox pattern)
 	go func() {
 		user, err := s.userRepo.GetByID(bgCtx, userID)
 		if err != nil {

@@ -60,7 +60,7 @@ func (rl *RateLimiter) getVisitor(ip string) *rate.Limiter {
 
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := r.RemoteAddr
+		ip := r.RemoteAddr //нужно учитывать X-Forwarded-For и другие заголовки
 		if idx := len(ip) - 1; idx >= 0 {
 			for i := len(ip) - 1; i >= 0; i-- {
 				if ip[i] == ':' {

@@ -98,3 +98,5 @@ func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(animal)
 }
+
+// Любой авторизованный пользователь может добавить животное (для приюта, которого он не является администратором). Администратор приюта может редактировать и удалять животных своего приюта.

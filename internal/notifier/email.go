@@ -46,7 +46,7 @@ func (e *EmailNotifier) SendAdoptionConfirmation(toEmail, userName, animalName s
 	d := gomail.NewDialer(e.host, e.port, e.username, e.password)
 
 	d.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // MinVersion: tls.VersionTLS12
 		ServerName:         e.host,
 	}
 	return d.DialAndSend(m)

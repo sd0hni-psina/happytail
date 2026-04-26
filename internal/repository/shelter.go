@@ -35,7 +35,7 @@ func (r *ShelterRepository) GetAll(ctx context.Context) ([]models.Shelter, error
 		}
 		shelters = append(shelters, s)
 	}
-	return shelters, nil
+	return shelters, rows.Err()
 }
 
 func (r *ShelterRepository) GetByID(ctx context.Context, id int) (*models.Shelter, error) {

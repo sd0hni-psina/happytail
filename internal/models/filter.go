@@ -28,13 +28,13 @@ func ParseFilter(r *http.Request) FilterParams {
 	if color != "" {
 		params.Color = &color
 	}
-	IsVaccinated, err := strconv.ParseBool(r.URL.Query().Get("IsVaccinated"))
+	IsVaccinated, err := strconv.ParseBool(r.URL.Query().Get("is_vaccinated"))
 	if err == nil {
 		params.IsVaccinated = &IsVaccinated
 	}
-	HasVetPasswort, err := strconv.ParseBool(r.URL.Query().Get("HasVetPasswort"))
+	HasVetPassport, err := strconv.ParseBool(r.URL.Query().Get("has_vet_passport"))
 	if err == nil {
-		params.HasVetPassport = &HasVetPasswort
+		params.HasVetPassport = &HasVetPassport
 	}
 	status := r.URL.Query().Get("status")
 	if status != "" {

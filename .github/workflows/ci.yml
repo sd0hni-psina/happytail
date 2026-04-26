@@ -2,64 +2,85 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
-    test:
-        name: Test
-        runs-on: ubuntu-latest
+  test:
+    name: Test
+    runs-on: ubuntu-latest
 
-        services:
-            postgres:
-                image: postgres:18.3-bookworm
-                env:
-                    POSTGRES_USER: test
-                    POSTGRES_PASSWORD: test
-                    POSTGRES_DB: test
-                ports:
-                    - 5432:5432
-                options: >-
-                    --health-cmd="pg_isready 
-                    --health-interval=5s
-                    --health-timeout=5s
-                    --health-retries=5
-                    --health-start-period=10s
-        
-            redis:
-                image: redis:7.2-alpine
-                ports:
-                    - 6379:6379
-                options: >-
-                    --health-cmd="redis-cli ping || exit 1"
-                    --health-interval=5s
-                    --health-timeout=5s
-                    --health-retries=5
-                    --health-start-period=10s
+    services:
+      postgres:
+        image: postgres:18.3-bookworm
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
+      redis:
+        image: redis:7.2-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: '1.23'
-                  cache: true
-            
-            - name: Download dependencies
-              run: go mod download
-            
-            - name: Build
-              run: go build ./cmd/api/...
-            
-            - name: Run tests
-              run: go test ./internal/... -v -race
-              env:
-                  POSTGRES_HOST: localhost
+    steps:
+  
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true 
+
+
+      - name: Download dependencies
+        run: go mod download
+
+
+      - name: Build
+        run: go build ./cmd/api/...
+
+      - name: Run tests
+        run: go test ./internal/... -v -race
+        env:
+          POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: test
           REDIS_ADDR: localhost:6379
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest

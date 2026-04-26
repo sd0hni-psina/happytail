@@ -30,7 +30,7 @@ func TestGetAnimalByID_NotFound(t *testing.T) {
 		animal: nil,
 		err:    models.ErrNotFound,
 	}
-	svc := NewAnimalService(repo)
+	svc := NewAnimalService(repo, nil)
 
 	animal, err := svc.GetAnimalByID(context.Background(), 1)
 
@@ -45,7 +45,7 @@ func TestGetAnimalByID_NotFound(t *testing.T) {
 func TestGetAnimalByID_Success(t *testing.T) {
 	expected := &models.Animal{ID: 42, Name: "Murzik"}
 	repo := &mockAnimalRepo{animal: expected, err: nil}
-	svc := NewAnimalService(repo)
+	svc := NewAnimalService(repo, nil)
 
 	animal, err := svc.GetAnimalByID(context.Background(), 42)
 
@@ -66,7 +66,7 @@ func TestGetAnimalByID_Success(t *testing.T) {
 func TestCreateAnimal_Succes(t *testing.T) {
 	expected := &models.Animal{ID: 1, Name: "Barsik"}
 	repo := &mockAnimalRepo{animal: expected, err: nil}
-	svc := NewAnimalService(repo)
+	svc := NewAnimalService(repo, nil)
 
 	input := models.CreateAnimalInput{Name: "Barsik", Type: models.AnimalTypeCat}
 
@@ -86,7 +86,7 @@ func TestCreateAnimal_Succes(t *testing.T) {
 func TestCreateAnimal_RepoError(t *testing.T) {
 	repoErr := errors.New("database unavailable")
 	repo := &mockAnimalRepo{animal: nil, err: repoErr}
-	svc := NewAnimalService(repo)
+	svc := NewAnimalService(repo, nil)
 
 	input := models.CreateAnimalInput{Name: "Barsik", Type: models.AnimalTypeCat}
 

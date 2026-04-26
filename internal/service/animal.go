@@ -42,11 +42,13 @@ func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.Paginat
 		Total   int             `json:"total"`
 	}
 
-	cached, err := s.cache.Get(ctx, cacheKey)
-	if err == nil {
-		var result cacheResult
-		if err := json.Unmarshal([]byte(cached), &result); err == nil {
-			return result.Animals, result.Total, nil
+	if s.cache != nil {
+		cached, err := s.cache.Get(ctx, cacheKey)
+		if err == nil {
+			var result cacheResult
+			if err := json.Unmarshal([]byte(cached), &result); err == nil {
+				return result.Animals, result.Total, nil
+			}
 		}
 	}
 
@@ -55,13 +57,15 @@ func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.Paginat
 		return nil, 0, err
 	}
 
-	go func() {
-		data, err := json.Marshal(cacheResult{Animals: animals, Total: total})
-		if err != nil {
-			return
-		}
-		s.cache.Set(context.Background(), cacheKey, string(data), animalCacheTTL)
-	}()
+	if s.cache != nil {
+		go func() {
+			data, err := json.Marshal(cacheResult{Animals: animals, Total: total})
+			if err != nil {
+				return
+			}
+			s.cache.Set(context.Background(), cacheKey, string(data), animalCacheTTL)
+		}()
+	}
 
 	return animals, total, nil
 }
@@ -69,25 +73,31 @@ func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.Paginat
 func (s *AnimalService) GetAnimalByID(ctx context.Context, id int) (*models.Animal, error) {
 	cacheKey := fmt.Sprintf("animals:id:%d", id)
 
-	cached, err := s.cache.Get(ctx, cacheKey)
-	if err == nil {
-		var animal models.Animal
-		if err = json.Unmarshal([]byte(cached), &animal); err == nil {
-			return &animal, nil
+	if s.cache != nil {
+		cached, err := s.cache.Get(ctx, cacheKey)
+		if err == nil {
+			var animal models.Animal
+			if err = json.Unmarshal([]byte(cached), &animal); err == nil {
+				return &animal, nil
+			}
 		}
 	}
+
 	animal, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	go func() {
-		data, err := json.Marshal(animal)
-		if err != nil {
-			return
-		}
-		s.cache.Set(context.Background(), cacheKey, string(data), animalCacheTTL)
-	}()
+	if s.cache != nil {
+		go func() {
+			data, err := json.Marshal(animal)
+			if err != nil {
+				return
+			}
+			s.cache.Set(context.Background(), cacheKey, string(data), animalCacheTTL)
+		}()
+	}
+
 	return animal, nil
 }
 
@@ -96,11 +106,13 @@ func (s *AnimalService) CreateAnimal(ctx context.Context, input models.CreateAni
 	if err != nil {
 		return nil, err
 	}
-	if err := s.cache.DeleteByPattern(ctx, "animals:*"); err != nil {
-		slog.Error("failed to invalidate animals cache", "error", err)
-		// _ = err // не кретичсно удалить кеш, просто логируется в middleware.Logger
-	} else {
-		slog.Info("animals cache invalidated")
+	if s.cache != nil {
+		if err := s.cache.DeleteByPattern(ctx, "animals:*"); err != nil {
+			slog.Error("failed to invalidate animals cache", "error", err)
+			// _ = err // не кретичсно удалить кеш, просто логируется в middleware.Logger
+		} else {
+			slog.Info("animals cache invalidated")
+		}
 	}
 	return animal, nil
 }

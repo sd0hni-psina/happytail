@@ -57,7 +57,7 @@ func (s *MinioStorage) Upload(ctx context.Context, file multipart.File, head *mu
 		return "", fmt.Errorf("failed to upload file: %w", err)
 	}
 
-	url := fmt.Sprintf("http://%s/%s/%s", s.publicURL, s.bucket, objectName)
+	url := fmt.Sprintf("%s/%s/%s", s.publicURL, s.bucket, objectName)
 	return url, nil
 }
 

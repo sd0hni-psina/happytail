@@ -60,4 +60,4 @@ test-cover:
 	@go tool cover -html=coverage.out
 
 dev:
-	docker compose up --build happytail-api happytail-minio
+	docker compose up --build happytail-api happytail-minio happytail-redis

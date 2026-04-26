@@ -32,6 +32,8 @@ type Config struct {
 	MinioPassword  string
 	MinioBucket    string
 	MinioPublicURL string
+
+	RedisAddr string
 }
 
 func (c *Config) Validate() error {
@@ -90,6 +92,9 @@ func (c *Config) Validate() error {
 	}
 	if c.MinioBucket == "" {
 		errs = append(errs, "MINIO_BUCKET is required")
+	}
+	if c.RedisAddr == "" {
+		errs = append(errs, "REDIS_ADDR is required")
 	}
 
 	if len(errs) > 0 {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	_ "github.com/sd0hni-psina/happytail/docs"
+	"github.com/sd0hni-psina/happytail/internal/cache"
 	"github.com/sd0hni-psina/happytail/internal/config"
 	"github.com/sd0hni-psina/happytail/internal/handler"
 	"github.com/sd0hni-psina/happytail/internal/logger"
@@ -53,6 +54,7 @@ func main() {
 		MinioPassword:    os.Getenv("MINIO_PASSWORD"),
 		MinioBucket:      os.Getenv("MINIO_BUCKET"),
 		MinioPublicURL:   os.Getenv("MINIO_PUBLIC_URL"),
+		RedisAddr:        os.Getenv("REDIS_ADDR"),
 	}
 	if err := cfg.Validate(); err != nil {
 		panic(err)
@@ -80,6 +82,11 @@ func main() {
 
 	appEnv := os.Getenv("APP_ENV")
 	log := logger.New(appEnv)
+	redisCache, err := cache.New(cfg.RedisAddr)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to redis: %v", err))
+	}
+	fmt.Println("redis connected!")
 
 	mux.HandleFunc("/health", handler.HealthHandler)
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
@@ -95,7 +102,7 @@ func main() {
 
 	// ANIMALS HANDLERS
 	animalRepo := repository.NewAnimalRepository(pool)
-	animalSvc := service.NewAnimalService(animalRepo)
+	animalSvc := service.NewAnimalService(animalRepo, redisCache)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
 	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)

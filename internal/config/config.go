@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -61,6 +62,16 @@ func (c *Config) Validate() error {
 	}
 	if c.SMTPHost == "" {
 		errs = append(errs, "SMTP_HOST is required")
+	}
+	if c.SMTPPort == "" {
+		errs = append(errs, "SMTP_PORT is required")
+	} else {
+		port, err := strconv.Atoi(c.SMTPPort)
+		if err != nil {
+			errs = append(errs, "SMTP_PORT must be a number")
+		} else if port < 1 || port > 65535 {
+			errs = append(errs, "SMTP_PORT must be between 1 and 65535")
+		}
 	}
 	if c.SMTPUsername == "" {
 		errs = append(errs, "SMTP_USERNAME is required")

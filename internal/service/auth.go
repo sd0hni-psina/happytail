@@ -95,7 +95,7 @@ func (s *UserService) Refresh(ctx context.Context, refreshToken string) (*models
 
 	return &models.AuthResponse{
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }
 

@@ -21,7 +21,11 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 }
 
 func (r *UserRepository) GetAll(ctx context.Context) ([]models.UserPublic, error) {
-	query := `SELECT id, full_name, email, phone_number, city, points, password_hash, created_at FROM users`
+	query := `
+        SELECT id, full_name, email, phone_number, city, points, created_at 
+        FROM users
+        ORDER BY created_at DESC
+    `
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -37,7 +41,7 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]models.UserPublic, error
 		}
 		users = append(users, u)
 	}
-	return users, nil
+	return users, rows.Err()
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, id int) (*models.UserPublic, error) {

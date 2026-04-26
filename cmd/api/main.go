@@ -157,7 +157,9 @@ func main() {
 			middleware.Recovery(
 				middleware.CORS(
 					middleware.Metrics(
-						rateLimiter.Middleware(mux),
+						middleware.BodyLimit(1 << 20)(
+							rateLimiter.Middleware(mux),
+						),
 					),
 				),
 			),

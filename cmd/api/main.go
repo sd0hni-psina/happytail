@@ -129,7 +129,7 @@ func main() {
 	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(userHandler.Logout)))
 	// ADOPTIONS HANDLERS
 	adoptionRepo := repository.NewAdoptionRepository(pool)
-	adoptionSvc := service.NewAdoptionService(adoptionRepo, userRepo, animalRepo, emailNotifier)
+	adoptionSvc := service.NewAdoptionService(adoptionRepo, userRepo, animalRepo, emailNotifier, redisCache)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
 	// POSTS HANDLERS

@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
+	"github.com/sd0hni-psina/happytail/internal/cache"
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
 
@@ -12,10 +14,11 @@ type AdoptionService struct {
 	userRepo   UserRepository
 	AnimalRepo AnimalRepository
 	notifier   Notifier
+	cache      *cache.Cache
 }
 
-func NewAdoptionService(repo AdoptionRepository, userRepo UserRepository, animalRepo AnimalRepository, notifier Notifier) *AdoptionService {
-	return &AdoptionService{repo: repo, userRepo: userRepo, AnimalRepo: animalRepo, notifier: notifier}
+func NewAdoptionService(repo AdoptionRepository, userRepo UserRepository, animalRepo AnimalRepository, notifier Notifier, cache *cache.Cache) *AdoptionService {
+	return &AdoptionService{repo: repo, userRepo: userRepo, AnimalRepo: animalRepo, notifier: notifier, cache: cache}
 }
 
 func (s *AdoptionService) CreateAdoption(ctx context.Context, userID, animalID int) (*models.Adoption, error) {
@@ -23,9 +26,17 @@ func (s *AdoptionService) CreateAdoption(ctx context.Context, userID, animalID i
 	if err != nil {
 		return nil, err
 	}
+	bgCtx := context.Background()
+
+	specificKey := fmt.Sprintf("animals:id:%d", animalID)
+	if err := s.cache.Delete(bgCtx, specificKey); err != nil {
+		slog.Error("failed to invalidate animal cache", "error", err, "animal_id", animalID)
+	}
+	if err := s.cache.DeleteByPattern(bgCtx, "animals:page=*"); err != nil {
+		slog.Error("failed to invalidate animals list cache", "error", err)
+	}
 
 	go func() {
-		bgCtx := context.Background()
 		user, err := s.userRepo.GetByID(bgCtx, userID)
 		if err != nil {
 			slog.Error("failed to get user got notification", "error", err, "user_id", userID)

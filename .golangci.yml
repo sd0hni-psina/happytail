@@ -1,0 +1,9 @@
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+
+issues:
+  max-issues-per-linter: 50

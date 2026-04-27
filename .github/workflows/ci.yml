@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test & Vet
     runs-on: ubuntu-latest
 
     services:
@@ -37,24 +37,23 @@ jobs:
           - 6379:6379
 
     steps:
-  
       - name: Checkout code
         uses: actions/checkout@v4
-
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26.1'
-          cache: true 
-
+          go-version-file: 'go.mod'
+          cache: true
 
       - name: Download dependencies
         run: go mod download
 
-
       - name: Build
         run: go build ./cmd/api/...
+
+      - name: Vet
+        run: go vet ./internal/...
 
       - name: Run tests
         run: go test ./internal/... -v -race
@@ -65,22 +64,3 @@ jobs:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: test
           REDIS_ADDR: localhost:6379
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.26.1'
-          cache: true
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest

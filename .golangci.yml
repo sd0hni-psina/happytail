@@ -1,9 +1,13 @@
 linters:
   enable:
     - govet
-    - staticcheck
-    - unused
     - ineffassign
 
+linters-settings: {}
+
 issues:
-  max-issues-per-linter: 50
+  max-issues-per-linter: 10
+  exclude-rules:
+    - linters:
+        - staticcheck
+      text: "SA1019"

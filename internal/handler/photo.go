@@ -88,7 +88,13 @@ func (h *AnimalPhotoHandler) DeletePhoto(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Invalid id", http.StatusBadRequest)
 		return
 	}
-	err = h.svc.DeletePhoto(r.Context(), id)
+	animalIDStr := r.PathValue("id")
+	animalID, err := strconv.Atoi(animalIDStr)
+	if err != nil {
+		http.Error(w, "Invalid animal id", http.StatusBadRequest)
+		return
+	}
+	err = h.svc.DeletePhoto(r.Context(), id, animalID)
 	if err != nil {
 		http.Error(w, "Failed to delete photo", http.StatusInternalServerError)
 		return

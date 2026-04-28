@@ -40,7 +40,7 @@ func (h *AnimalPhotoHandler) AddPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, "filte too large", http.StatusBadRequest)
+		http.Error(w, "file too large", http.StatusBadRequest)
 		return
 	}
 

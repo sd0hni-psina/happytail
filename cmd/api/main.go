@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -82,6 +83,7 @@ func main() {
 
 	appEnv := os.Getenv("APP_ENV")
 	log := logger.New(appEnv)
+	slog.SetDefault(log)
 	redisCache, err := cache.New(cfg.RedisAddr)
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to redis: %v", err))
@@ -97,6 +99,7 @@ func main() {
 		panic(fmt.Sprintf("Unable to connect to database: %v", err))
 	}
 	defer pool.Close()
+	defer redisCache.Close()
 
 	authMiddleware := middleware.Auth(cfg.JWTSecret)
 
@@ -109,7 +112,7 @@ func main() {
 	mux.Handle("POST /animals", authMiddleware(http.HandlerFunc(animalHandler.CreateAnimal)))
 	// SHELTERS HANDLERS
 	shelterRepo := repository.NewShelterRepository(pool)
-	shelterSvc := service.NewShelterService(shelterRepo)
+	shelterSvc := service.NewShelterService(shelterRepo, redisCache)
 	shelterHandler := handler.NewShelterHandler(shelterSvc)
 	mux.HandleFunc("GET /shelters/nearby", shelterHandler.FindNearby)
 	mux.HandleFunc("GET /shelters", shelterHandler.GetAllShelters)
@@ -134,14 +137,14 @@ func main() {
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
 	// POSTS HANDLERS
 	postRepo := repository.NewPostRepository(pool)
-	postSvc := service.NewPostService(postRepo)
+	postSvc := service.NewPostService(postRepo, redisCache)
 	postHandler := handler.NewPostHandler(postSvc)
 	mux.HandleFunc("GET /posts", postHandler.GetAllPost)
 	mux.HandleFunc("GET /posts/{id}", postHandler.GetPostByID)
 	mux.Handle("POST /posts", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
 	// PHOTOS HANDLERS
 	photoRepo := repository.NewAnimalPhotoRepository(pool)
-	photoSvc := service.NewAnimalPhotoService(photoRepo, minioStorage)
+	photoSvc := service.NewAnimalPhotoService(photoRepo, minioStorage, redisCache)
 	photoHandler := handler.NewAnimalPhotoHandler(photoSvc)
 	mux.Handle("POST /animals/{id}/photos", authMiddleware(http.HandlerFunc(photoHandler.AddPhoto)))
 	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(http.HandlerFunc(photoHandler.DeletePhoto)))

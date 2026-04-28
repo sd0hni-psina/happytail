@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"strings"
+	"time"
+)
 
 type Shelter struct {
 	ID        int       `json:"id"`
@@ -31,4 +35,22 @@ type NearbyParams struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	RadiusKm  float64 `json:"radius_km"`
+}
+
+func (csi CreateShelterInput) Validate() error {
+	validationErrors := make(map[string]string)
+	if csi.Longitude != nil && (*csi.Longitude < -180 || *csi.Longitude > 180) {
+		validationErrors["longitude"] = "must be between -180 and 180"
+	}
+	if csi.Latitude != nil && (*csi.Latitude < -90 || *csi.Latitude > 90) {
+		validationErrors["latitude"] = "must be between -90 and 90"
+	}
+	if len(validationErrors) > 0 {
+		msgs := make([]string, 0, len(validationErrors))
+		for field, msg := range validationErrors {
+			msgs = append(msgs, field+": "+msg)
+		}
+		return errors.New(strings.Join(msgs, ", "))
+	}
+	return nil
 }

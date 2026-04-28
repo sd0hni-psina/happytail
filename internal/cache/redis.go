@@ -60,3 +60,7 @@ func (c *Cache) DeleteByPattern(ctx context.Context, pattern string) error {
 	}
 	return nil
 }
+
+func (c *Cache) Close() error {
+	return c.client.Close()
+}

@@ -88,6 +88,10 @@ func (h *ShelterHandler) CreateShelter(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Name and Address are required", http.StatusBadRequest)
 		return
 	}
+	if err := input.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	shelter, err := h.svc.CreateShelter(r.Context(), input)
 	if err != nil {

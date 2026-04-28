@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -60,14 +61,12 @@ func (rl *RateLimiter) getVisitor(ip string) *rate.Limiter {
 
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := r.RemoteAddr //нужно учитывать X-Forwarded-For и другие заголовки
-		if idx := len(ip) - 1; idx >= 0 {
-			for i := len(ip) - 1; i >= 0; i-- {
-				if ip[i] == ':' {
-					ip = ip[:i]
-					break
-				}
-			}
+		ip := r.Header.Get("X-Forwarded-For")
+		if ip == "" {
+			ip = r.RemoteAddr
+		} else {
+			ip = strings.Split(ip, ",")[0]
+			ip = strings.TrimSpace(ip)
 		}
 
 		if !rl.getVisitor(ip).Allow() {
@@ -77,3 +76,13 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// ip := r.RemoteAddr //нужно учитывать X-Forwarded-For и другие заголовки
+// if idx := len(ip) - 1; idx >= 0 {
+// 	for i := len(ip) - 1; i >= 0; i-- {
+// 		if ip[i] == ':' {
+// 			ip = ip[:i]
+// 			break
+// 		}
+// 	}
+// }

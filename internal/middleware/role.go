@@ -7,7 +7,7 @@ import (
 
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
-
+// НИГДЕ НЕ ИСПОЛЬЗУЕТСЯ, НУЖНО РЕАЛИЗОВАТЬ 
 type AnimalShelterGetter interface {
 	GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error)
 }

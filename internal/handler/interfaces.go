@@ -41,7 +41,7 @@ type PostService interface {
 
 type AnimalPhotoService interface {
 	AddPhoto(ctx context.Context, animalID int, file multipart.File, header *multipart.FileHeader, isMain bool) (*models.AnimalPhoto, error)
-	DeletePhoto(ctx context.Context, photoID int) error
+	DeletePhoto(ctx context.Context, photoID int, animalID int) error
 	MakeMainPhoto(ctx context.Context, animalID, photoID int) error
 	GetAllPhotos(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)
 }

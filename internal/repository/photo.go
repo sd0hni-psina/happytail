@@ -78,7 +78,7 @@ func (ap *AnimalPhotoRepository) GetAll(ctx context.Context, animalID int) ([]mo
 	}
 	defer rows.Close()
 
-	var photos []models.AnimalPhoto
+	photos := make([]models.AnimalPhoto, 0)
 	for rows.Next() {
 		var p models.AnimalPhoto
 		err := rows.Scan(&p.ID, &p.AnimalID, &p.URL, &p.IsMain, &p.CreatedAt)

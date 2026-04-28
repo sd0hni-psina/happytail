@@ -2,11 +2,14 @@ package models
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
 )
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type User struct {
 	ID           int       `json:"id"`
@@ -50,8 +53,8 @@ func (cui *CreateUserInput) Validate() error {
 	if cui.FullName == "" {
 		ValidationErrors["full name"] = "name is required"
 	}
-	if cui.Email == "" || !strings.Contains(cui.Email, "@") || !strings.Contains(cui.Email, ".") {
-		ValidationErrors["email"] = "email is required"
+	if cui.Email == "" || !emailRegex.MatchString(cui.Email) {
+		ValidationErrors["email"] = "valid email is required"
 	}
 	if utf8.RuneCountInString(cui.Password) < 8 {
 		ValidationErrors["password"] = "password must be have > 8 symbols"

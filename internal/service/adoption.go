@@ -12,13 +12,13 @@ import (
 type AdoptionService struct {
 	repo       AdoptionRepository
 	userRepo   UserRepository
-	AnimalRepo AnimalRepository
+	animalRepo AnimalRepository
 	notifier   Notifier
 	cache      *cache.Cache
 }
 
 func NewAdoptionService(repo AdoptionRepository, userRepo UserRepository, animalRepo AnimalRepository, notifier Notifier, cache *cache.Cache) *AdoptionService {
-	return &AdoptionService{repo: repo, userRepo: userRepo, AnimalRepo: animalRepo, notifier: notifier, cache: cache}
+	return &AdoptionService{repo: repo, userRepo: userRepo, animalRepo: animalRepo, notifier: notifier, cache: cache}
 }
 
 func (s *AdoptionService) CreateAdoption(ctx context.Context, userID, animalID int) (*models.Adoption, error) {
@@ -42,7 +42,7 @@ func (s *AdoptionService) CreateAdoption(ctx context.Context, userID, animalID i
 			slog.Error("failed to get user got notification", "error", err, "user_id", userID)
 			return
 		}
-		animal, err := s.AnimalRepo.GetByID(bgCtx, animalID)
+		animal, err := s.animalRepo.GetByID(bgCtx, animalID)
 		if err != nil {
 			slog.Error("failed to get animal for notification", "error", err, "animal_id", animalID)
 			return

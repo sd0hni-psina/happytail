@@ -55,3 +55,5 @@ func Auth(secret string) func(next http.Handler) http.Handler {
 		})
 	}
 }
+
+// Хранить отозованные access token в Редис. 

@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
@@ -88,4 +90,21 @@ func (ap *AnimalPhotoRepository) GetAll(ctx context.Context, animalID int) ([]mo
 		photos = append(photos, p)
 	}
 	return photos, rows.Err()
+}
+
+func (ap *AnimalPhotoRepository) GetByID(ctx context.Context, photoID int) (*models.AnimalPhoto, error) {
+	query := `SELECT 
+	id, animal_id, url, is_main, created_at
+	FROM animal_photos
+	WHERE id = $1`
+
+	p := models.AnimalPhoto{}
+	err := ap.pool.QueryRow(ctx, query, photoID).Scan(&p.ID, &p.AnimalID, &p.URL, &p.IsMain, &p.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+	return &p, nil
 }

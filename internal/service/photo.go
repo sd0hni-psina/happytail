@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"mime/multipart"
+	"path"
 
 	"github.com/sd0hni-psina/happytail/internal/cache"
 	"github.com/sd0hni-psina/happytail/internal/models"
@@ -32,24 +33,47 @@ func (s *AnimalPhotoService) AddPhoto(ctx context.Context, animalID int, file mu
 		IsMain:   isMain,
 	}
 
+	photo, err := s.repo.Add(ctx, input)
+	if err != nil {
+		objectName := path.Base(url)
+		if delErr := s.storage.Delete(ctx, objectName); delErr != nil {
+			slog.Error("failed to delete uploaded photo after DB error", "error", delErr, "object", objectName)
+		} else {
+			slog.Info("uploaded photo deleted after DB error", "object", objectName)
+		}
+		return nil, err
+	}
+
 	if s.cache != nil {
-		if err := s.cache.DeleteByPattern(ctx, "photos:*"); err != nil {
+		cacheKey := fmt.Sprintf("photos:animal:%d", animalID)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
 			slog.Error("failed to invalidate photos cache", "error", err)
 		} else {
 			slog.Info("photos cache invalidated")
 		}
 	}
 
-	return s.repo.Add(ctx, input)
+	return photo, nil
 }
 
 func (s *AnimalPhotoService) DeletePhoto(ctx context.Context, photoID int, animalID int) error {
+	photo, err := s.repo.GetByID(ctx, photoID)
+	if err != nil {
+		return err
+	}
+
+	objectName := path.Base(photo.URL)
+	if err := s.storage.Delete(ctx, objectName); err != nil {
+		slog.Error("failed to delete photo from storage", "error", err, "object", objectName)
+	}
+
 	if err := s.repo.Delete(ctx, photoID); err != nil {
 		return err
 	}
 
 	if s.cache != nil {
-		if err := s.cache.DeleteByPattern(ctx, fmt.Sprintf("photos:animal:%d", animalID)); err != nil {
+		cacheKey := fmt.Sprintf("photos:animal:%d", animalID)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
 			slog.Error("failed to invalidate photos cache", "error", err)
 		} else {
 			slog.Info("photos cache invalidated")
@@ -60,6 +84,14 @@ func (s *AnimalPhotoService) DeletePhoto(ctx context.Context, photoID int, anima
 }
 
 func (s *AnimalPhotoService) MakeMainPhoto(ctx context.Context, animalID, photoID int) error {
+	photo, err := s.repo.GetByID(ctx, photoID)
+	if err != nil {
+		return err
+	}
+
+	if photo.AnimalID != animalID {
+		return models.ErrNotFound
+	}
 	return s.repo.MakeMain(ctx, animalID, photoID)
 }
 

@@ -43,6 +43,7 @@ type AnimalPhotoRepository interface {
 	Delete(ctx context.Context, photoID int) error
 	MakeMain(ctx context.Context, animalID, photoID int) error
 	GetAll(ctx context.Context, animalID int) ([]models.AnimalPhoto, error)
+	GetByID(ctx context.Context, photoID int) (*models.AnimalPhoto, error)
 }
 
 type RoleRepository interface {

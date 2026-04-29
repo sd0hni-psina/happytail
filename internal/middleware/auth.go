@@ -49,11 +49,21 @@ func Auth(secret string) func(next http.Handler) http.Handler {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			userID := int(claims["user_id"].(float64))
-			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+
+			rawID, exists := claims["user_id"]
+			if !exists {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			floatID, ok := rawID.(float64)
+			if !ok || floatID <= 0 {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			ctx := context.WithValue(r.Context(), UserIDKey, int(floatID))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// Хранить отозованные access token в Редис. 
+// Хранить отозованные access token в Редис.

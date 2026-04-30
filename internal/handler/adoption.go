@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/models"
@@ -64,4 +65,41 @@ func (h *AdoptionHandler) CreateAdoption(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(adoption)
+}
+
+// GetUserAdoptions godoc
+// @Summary История усыновлений пользователя
+// @Tags adoptions
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path int true "ID пользователя"
+// @Success 200 {array} models.Adoption
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /users/{id}/adoptions [get]
+func (h *AdoptionHandler) GetUserAdoptions(w http.ResponseWriter, r *http.Request) {
+	targetIDStr := r.PathValue("id")
+	targerID, err := strconv.Atoi(targetIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	requestingUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if requestingUserID != targerID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	adoptions, err := h.svc.GetByUserID(r.Context(), targerID)
+	if err != nil {
+		http.Error(w, "Failed to get adoptions", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(adoptions)
 }

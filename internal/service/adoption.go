@@ -57,3 +57,7 @@ func (s *AdoptionService) CreateAdoption(ctx context.Context, userID, animalID i
 	}()
 	return adoption, nil
 }
+
+func (s *AdoptionService) GetByUserID(ctx context.Context, userID int) ([]models.Adoption, error) {
+	return s.repo.GetByUserID(ctx, userID)
+}

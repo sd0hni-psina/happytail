@@ -12,6 +12,7 @@ type AnimalRepository interface {
 	GetAll(ctx context.Context, limit, offset int, filter models.FilterParams) ([]models.Animal, int, error)
 	GetByID(ctx context.Context, id int) (*models.Animal, error)
 	Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
+	GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error)
 }
 
 type ShelterRepository interface {
@@ -30,6 +31,7 @@ type UserRepository interface {
 
 type AdoptionRepository interface {
 	Create(ctx context.Context, userID, animalID int) (*models.Adoption, error)
+	GetByUserID(ctx context.Context, userID int) ([]models.Adoption, error)
 }
 
 type PostRepository interface {

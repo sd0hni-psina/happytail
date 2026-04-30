@@ -100,3 +100,33 @@ func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 }
 
 // Любой авторизованный пользователь может добавить животное (для приюта, которого он не является администратором). Администратор приюта может редактировать и удалять животных своего приюта.
+
+func (h *AnimalHandler) UpdateAnimal(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid animal ID", http.StatusBadRequest)
+		return
+	}
+
+	var input models.UpdateAnimalInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+	if err := input.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	animal, err := h.svc.UpdateAnimal(r.Context(), id, input)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Animal not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to update animal", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(animal)
+}

@@ -59,6 +59,39 @@ type CreateAnimalInput struct {
 	ShelterID   *int    `json:"shelter_id"`
 }
 
+type UpdateAnimalInput struct {
+	Name           *string `json:"name"`
+	Age            *int    `json:"age"`
+	Breed          *string `json:"breed"`
+	Color          *string `json:"color"`
+	IsVaccinated   *bool   `json:"is_vaccinated"`
+	HasVetPassport *bool   `json:"has_vet_passport"`
+
+	Description *string `json:"description"`
+	Status      *string `json:"status"`
+}
+
+var validAnimalStatuses = map[string]struct{}{
+	"available": {},
+	"adopted":   {},
+	"pending":   {},
+}
+
+func (uai *UpdateAnimalInput) Validate() error {
+	if uai.Name != nil && *uai.Name == "" {
+		return errors.New("name cannot be empty")
+	}
+	if uai.Age != nil && *uai.Age < 0 {
+		return errors.New("age cannot be negative")
+	}
+	if uai.Status != nil {
+		if _, ok := validAnimalStatuses[*uai.Status]; !ok {
+			return fmt.Errorf("invalid status: %s", *uai.Status)
+		}
+	}
+	return nil
+}
+
 func (cai *CreateAnimalInput) Validate() error {
 	cai.Type = cai.Type.Normalize()
 	validationErrors := make(map[string]string)

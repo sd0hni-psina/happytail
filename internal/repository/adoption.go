@@ -59,6 +59,30 @@ func (r *AdoptionRepository) Create(ctx context.Context, userID, animalID int) (
 	return adoption, nil
 }
 
+func (r *AdoptionRepository) GetByUserID(ctx context.Context, userID int) ([]models.Adoption, error) {
+	query := `SELECT id, user_id, animal_id, created_at, updated_at
+			  FROM adoptions
+			  WHERE user_id = $1
+			  ORDER BY created_at DESC`
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	adoptions := make([]models.Adoption, 0)
+	for rows.Next() {
+		var a models.Adoption
+		err := rows.Scan(&a.ID, &a.UserID, &a.AnimalID, &a.CreatedAt, &a.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		adoptions = append(adoptions, a)
+	}
+	return adoptions, nil
+}
+
 // Пусть пока тут лежит
 // query := `INSERT INTO adoptions (user_id, animal_id) VALUES ($1, $2) RETURNING id, user_id, animal_id, created_at, updated_at`
 // query2 := `UPDATE animals SET status = 'adopted' WHERE id = $1`

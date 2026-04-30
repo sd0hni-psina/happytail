@@ -75,28 +75,29 @@ func (r *ShelterRepository) Create(ctx context.Context, input models.CreateShelt
 }
 
 func (r *ShelterRepository) FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error) {
-	// ТРИДАЦАТЬ ТРИ РАЗА ПЕРЕПРОВЕРИТЬ
 	query := `
-		SELECT 
-			id, name, address, email, phone_number, 
+		SELECT
+			id, name, address, email, phone_number,
 			latitude, longitude, created_at,
 			distance_km
 		FROM (
-			SELECT 
+			SELECT
 				id, name, address, email, phone_number, latitude, longitude, created_at,
 				(6371 * acos(
-					LEAST(1.0, 
+					LEAST(1.0,
 						cos(radians($1)) * cos(radians(latitude)) *
 						cos(radians(longitude) - radians($2)) +
 						sin(radians($1)) * sin(radians(latitude))
 					)
 				)) AS distance_km
 			FROM shelters
-			WHERE 
-				latitude IS NOT NULL 
+			WHERE
+				latitude IS NOT NULL
 				AND longitude IS NOT NULL
-				AND latitude  BETWEEN $1 - ($3 / 111.0) AND $1 + ($3 / 111.0)
-				AND longitude BETWEEN $2 - ($3 / 111.0) AND $2 + ($3 / 111.0)
+				AND latitude  BETWEEN $1 - ($3 / 111.0)
+				                  AND $1 + ($3 / 111.0)
+				AND longitude BETWEEN $2 - ($3 / (111.0 * cos(radians($1))))
+				                  AND $2 + ($3 / (111.0 * cos(radians($1))))
 		) AS shelters_with_distance
 		WHERE distance_km <= $3
 		ORDER BY distance_km ASC

@@ -103,26 +103,47 @@ func main() {
 
 	authMiddleware := middleware.Auth(cfg.JWTSecret)
 
-	// ANIMALS HANDLERS
+	// REPOSITORIES
+	roleRepo := repository.NewRoleRepository(pool)
 	animalRepo := repository.NewAnimalRepository(pool)
+	shelterRepo := repository.NewShelterRepository(pool)
+	userRepo := repository.NewUserRepository(pool)
+	tokenRepo := repository.NewRefreshTokenRepository(pool)
+	adoptionRepo := repository.NewAdoptionRepository(pool)
+	postRepo := repository.NewPostRepository(pool)
+	photoRepo := repository.NewAnimalPhotoRepository(pool)
+	// SERVICES
 	animalSvc := service.NewAnimalService(animalRepo, redisCache)
+	roleSvc := service.NewRoleService(roleRepo)
+	userSvc := service.NewUserService(userRepo, tokenRepo, cfg.JWTSecret)
+	adoptionSvc := service.NewAdoptionService(adoptionRepo, userRepo, animalRepo, emailNotifier, redisCache)
+	shelterSvc := service.NewShelterService(shelterRepo, redisCache)
+	postSvc := service.NewPostService(postRepo, redisCache)
+	photoSvc := service.NewAnimalPhotoService(photoRepo, minioStorage, redisCache)
+	// HANDLERS
+	roleHandler := handler.NewRoleHandler(roleSvc)
+	requireShelterAdminForAnimal := middleware.RequireShelterAdminForAnimal(roleRepo, animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
+	shelterHandler := handler.NewShelterHandler(shelterSvc)
+	userHandler := handler.NewUserHandler(userSvc)
+	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
+	postHandler := handler.NewPostHandler(postSvc)
+	photoHandler := handler.NewAnimalPhotoHandler(photoSvc)
+
+	// ANIMALS HANDLERS
 	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
 	mux.Handle("POST /animals", authMiddleware(http.HandlerFunc(animalHandler.CreateAnimal)))
+	mux.Handle("PATCH /animals/{id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(animalHandler.UpdateAnimal))))
+	// ROLE HANDLERS
+	mux.Handle("POST /roles", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.AppointRole))))
+	mux.Handle("DELETE /roles/{id}", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.RemoveRole))))
 	// SHELTERS HANDLERS
-	shelterRepo := repository.NewShelterRepository(pool)
-	shelterSvc := service.NewShelterService(shelterRepo, redisCache)
-	shelterHandler := handler.NewShelterHandler(shelterSvc)
 	mux.HandleFunc("GET /shelters/nearby", shelterHandler.FindNearby)
 	mux.HandleFunc("GET /shelters", shelterHandler.GetAllShelters)
 	mux.HandleFunc("GET /shelters/{id}", shelterHandler.GetShelterByID)
 	mux.Handle("POST /shelters", authMiddleware(http.HandlerFunc(shelterHandler.CreateShelter)))
 	// USERS HANDLERS
-	userRepo := repository.NewUserRepository(pool)
-	tokenRepo := repository.NewRefreshTokenRepository(pool)
-	userSvc := service.NewUserService(userRepo, tokenRepo, cfg.JWTSecret)
-	userHandler := handler.NewUserHandler(userSvc)
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetUserByID)
 	mux.HandleFunc("POST /users", userHandler.CreateUser)
@@ -131,31 +152,17 @@ func main() {
 	mux.HandleFunc("POST /auth/refresh", userHandler.Refresh)
 	mux.Handle("POST /auth/logout", authMiddleware(http.HandlerFunc(userHandler.Logout)))
 	// ADOPTIONS HANDLERS
-	adoptionRepo := repository.NewAdoptionRepository(pool)
-	adoptionSvc := service.NewAdoptionService(adoptionRepo, userRepo, animalRepo, emailNotifier, redisCache)
-	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	mux.Handle("POST /adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.CreateAdoption)))
+	mux.Handle("GET /users/{id}/adoptions", authMiddleware(http.HandlerFunc(adoptionHandler.GetUserAdoptions)))
 	// POSTS HANDLERS
-	postRepo := repository.NewPostRepository(pool)
-	postSvc := service.NewPostService(postRepo, redisCache)
-	postHandler := handler.NewPostHandler(postSvc)
 	mux.HandleFunc("GET /posts", postHandler.GetAllPost)
 	mux.HandleFunc("GET /posts/{id}", postHandler.GetPostByID)
 	mux.Handle("POST /posts", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
 	// PHOTOS HANDLERS
-	photoRepo := repository.NewAnimalPhotoRepository(pool)
-	photoSvc := service.NewAnimalPhotoService(photoRepo, minioStorage, redisCache)
-	photoHandler := handler.NewAnimalPhotoHandler(photoSvc)
-	mux.Handle("POST /animals/{id}/photos", authMiddleware(http.HandlerFunc(photoHandler.AddPhoto)))
-	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(http.HandlerFunc(photoHandler.DeletePhoto)))
-	mux.Handle("PATCH /animals/{id}/photos/{photo_id}/main", authMiddleware(http.HandlerFunc(photoHandler.MakeMainPhoto)))
+	mux.Handle("POST /animals/{id}/photos", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(photoHandler.AddPhoto))))
+	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(photoHandler.DeletePhoto))))
+	mux.Handle("PATCH /animals/{id}/photos/{photo_id}/main", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(photoHandler.MakeMainPhoto))))
 	mux.HandleFunc("GET /animals/{id}/photos", photoHandler.GetAllPhotos)
-	// ROLE HANDLERS
-	roleRepo := repository.NewRoleRepository(pool)
-	roleSvc := service.NewRoleService(roleRepo)
-	roleHandler := handler.NewRoleHandler(roleSvc)
-	mux.Handle("POST /roles", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.AppointRole))))
-	mux.Handle("DELETE /roles/{id}", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.RemoveRole))))
 
 	fmt.Println("db connected!")
 	fmt.Printf("Starting server on port %s\n", cfg.AppPort)

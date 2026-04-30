@@ -1,0 +1,2 @@
+ALTER TABLE shelters
+    ALTER COLUMN email SET NOT NULL;

@@ -132,3 +132,66 @@ func (r *AnimalRepository) GetShelterIDByAnimalID(ctx context.Context, animalID 
 	}
 	return id, nil
 }
+
+func (r *AnimalRepository) Update(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error) {
+	setClauses := []string{}
+	args := []any{}
+
+	if input.Name != nil {
+		args = append(args, *input.Name)
+		setClauses = append(setClauses, fmt.Sprintf("name = $%d", len(args)))
+	}
+	if input.Age != nil {
+		args = append(args, *input.Age)
+		setClauses = append(setClauses, fmt.Sprintf("age = $%d", len(args)))
+	}
+	if input.Breed != nil {
+		args = append(args, *input.Breed)
+		setClauses = append(setClauses, fmt.Sprintf("breed = $%d", len(args)))
+	}
+	if input.Color != nil {
+		args = append(args, *input.Color)
+		setClauses = append(setClauses, fmt.Sprintf("color = $%d", len(args)))
+	}
+	if input.IsVaccinated != nil {
+		args = append(args, *input.IsVaccinated)
+		setClauses = append(setClauses, fmt.Sprintf("is_vaccinated = $%d", len(args)))
+	}
+	if input.HasVetPassport != nil {
+		args = append(args, *input.HasVetPassport)
+		setClauses = append(setClauses, fmt.Sprintf("has_vet_passport = $%d", len(args)))
+	}
+	if input.Description != nil {
+		args = append(args, *input.Description)
+		setClauses = append(setClauses, fmt.Sprintf("description = $%d", len(args)))
+	}
+	if input.Status != nil {
+		args = append(args, *input.Status)
+		setClauses = append(setClauses, fmt.Sprintf("status = $%d", len(args)))
+	}
+	if len(setClauses) == 0 {
+		return r.GetByID(ctx, id)
+	}
+
+	args = append(args, id)
+	query := fmt.Sprintf(`UPDATE animals SET %s WHERE id = $%d
+		RETURNING id, animal_type, name, age, breed, color,
+		is_vaccinated, has_vet_passport, description,
+		shelter_id, status, share_count, created_at`,
+		strings.Join(setClauses, ", "), len(args),
+	)
+
+	a := models.Animal{}
+	err := r.pool.QueryRow(ctx, query, args...).Scan(
+		&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color,
+		&a.IsVaccinated, &a.HasVetPassport, &a.Description,
+		&a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+	return &a, nil
+}

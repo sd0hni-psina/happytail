@@ -10,6 +10,7 @@ import (
 type AnimalService interface {
 	GetAllAnimals(ctx context.Context, params models.PaginationParams, filter models.FilterParams) ([]models.Animal, int, error)
 	GetAnimalByID(ctx context.Context, id int) (*models.Animal, error)
+	UpdateAnimal(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error)
 	CreateAnimal(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 }
 
@@ -31,6 +32,7 @@ type UserService interface {
 
 type AdoptionService interface {
 	CreateAdoption(ctx context.Context, userID, animalID int) (*models.Adoption, error)
+	GetByUserID(ctx context.Context, userID int) ([]models.Adoption, error)
 }
 
 type PostService interface {

@@ -116,3 +116,21 @@ func (s *AnimalService) CreateAnimal(ctx context.Context, input models.CreateAni
 	}
 	return animal, nil
 }
+
+func (s *AnimalService) UpdateAnimal(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error) {
+	animal, err := s.repo.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		specificKey := fmt.Sprintf("animals:id:%d", id)
+		if err := s.cache.Delete(ctx, specificKey); err != nil {
+			slog.Error("failed to invalidate animal cache", "error", err, "animal_id", id)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "animals:page=*"); err != nil {
+			slog.Error("failed to invalidate animals list cache", "error", err)
+		}
+	}
+	return animal, nil
+}

@@ -25,6 +25,14 @@ func (m *mockAnimalRepo) Create(ctx context.Context, input models.CreateAnimalIn
 	return m.animal, m.err
 }
 
+func (m *mockAnimalRepo) GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error) {
+	return nil, nil
+}
+
+func (m *mockAnimalRepo) Update(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error) {
+	return m.animal, m.err
+}
+
 func TestGetAnimalByID_NotFound(t *testing.T) {
 	repo := &mockAnimalRepo{
 		animal: nil,

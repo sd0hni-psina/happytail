@@ -12,6 +12,7 @@ type FilterParams struct {
 	IsVaccinated   *bool   `json:"is_vaccinated"`
 	HasVetPassport *bool   `json:"has_vet_passport"`
 	Status         *string `json:"status"`
+	ShelterID      *int    `json:"shelter_id"`
 }
 
 func ParseFilter(r *http.Request) FilterParams {

@@ -12,14 +12,16 @@ type AnimalRepository interface {
 	GetAll(ctx context.Context, limit, offset int, filter models.FilterParams) ([]models.Animal, int, error)
 	GetByID(ctx context.Context, id int) (*models.Animal, error)
 	Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
+	Update(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error)
 	GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error)
 }
 
 type ShelterRepository interface {
-	GetAll(ctx context.Context) ([]models.Shelter, error)
+	GetAll(ctx context.Context, limit, offset int, filter models.FilterParams) ([]models.Shelter, int, error)
 	GetByID(ctx context.Context, id int) (*models.Shelter, error)
 	Create(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error)
 	FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error)
+	Update(ctx context.Context, id int, input models.UpdateShelterInput) (*models.Shelter, error)
 }
 
 type UserRepository interface {

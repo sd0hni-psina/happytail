@@ -22,33 +22,38 @@ func NewPostService(repo PostRepository, cache *cache.Cache) *PostService {
 	return &PostService{repo: repo, cache: cache}
 }
 
-func (s *PostService) GetAllPost(ctx context.Context) ([]models.Post, error) {
-	cacheKey := "posts:all"
+func (s *PostService) GetAllPost(ctx context.Context, params models.PaginationParams) ([]models.Post, int, error) {
+	cacheKey := fmt.Sprintf("posts:page=%d:limit=%d", params.Page, params.Limit)
+
+	type cacheResult struct {
+		Posts []models.Post `json:"posts"`
+		Total int           `json:"total"`
+	}
 
 	if s.cache != nil {
-		cached, err := s.cache.Get(ctx, cacheKey)
-		if err == nil {
-			var posts []models.Post
-			if err := json.Unmarshal([]byte(cached), &posts); err == nil {
-				return posts, nil
+		if cached, err := s.cache.Get(ctx, cacheKey); err == nil {
+			var result cacheResult
+			if err := json.Unmarshal([]byte(cached), &result); err == nil {
+				return result.Posts, result.Total, nil
 			}
 		}
 	}
-	posts, err := s.repo.GetAll(ctx)
+
+	posts, total, err := s.repo.GetAll(ctx, params.Limit, params.Offset())
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if s.cache != nil {
 		go func() {
-			data, err := json.Marshal(posts)
+			data, err := json.Marshal(cacheResult{Posts: posts, Total: total})
 			if err != nil {
 				return
 			}
 			s.cache.Set(context.Background(), cacheKey, string(data), postCacheTTL)
 		}()
 	}
-	return posts, nil
+	return posts, total, nil
 }
 
 func (s *PostService) GetPostByID(ctx context.Context, id int) (*models.Post, error) {

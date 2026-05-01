@@ -52,6 +52,10 @@ func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int, filter
 		conditions = append(conditions, fmt.Sprintf("status = $%d", len(args)+1))
 		args = append(args, *filter.Status)
 	}
+	if filter.ShelterID != nil {
+		conditions = append(conditions, fmt.Sprintf("shelter_id = $%d", len(args)+1))
+		args = append(args, *filter.ShelterID)
+	}
 
 	whereClause := ""
 	if len(conditions) > 0 {

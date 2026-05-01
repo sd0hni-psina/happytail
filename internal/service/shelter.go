@@ -23,34 +23,38 @@ func NewShelterService(repo ShelterRepository, cache *cache.Cache) *ShelterServi
 	return &ShelterService{repo: repo, cache: cache}
 }
 
-func (s *ShelterService) GetAllShelters(ctx context.Context) ([]models.Shelter, error) {
-	cacheKey := "shelters:all"
+func (s *ShelterService) GetAllShelters(ctx context.Context, params models.PaginationParams) ([]models.Shelter, int, error) {
+	cacheKey := fmt.Sprintf("shelters:page=%d:limit=%d", params.Page, params.Limit)
+
+	type cacheResult struct {
+		Shelters []models.Shelter `json:"shelters"`
+		Total    int              `json:"total"`
+	}
 
 	if s.cache != nil {
-		cached, err := s.cache.Get(ctx, cacheKey)
-		if err == nil {
-			var shelters []models.Shelter
-			if err := json.Unmarshal([]byte(cached), &shelters); err == nil {
-				return shelters, nil
+		if cached, err := s.cache.Get(ctx, cacheKey); err == nil {
+			var result cacheResult
+			if err := json.Unmarshal([]byte(cached), &result); err == nil {
+				return result.Shelters, result.Total, nil
 			}
 		}
 	}
 
-	shelters, err := s.repo.GetAll(ctx)
+	shelters, total, err := s.repo.GetAll(ctx, params.Limit, params.Offset())
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if s.cache != nil {
 		go func() {
-			data, err := json.Marshal(shelters)
+			data, err := json.Marshal(cacheResult{Shelters: shelters, Total: total})
 			if err != nil {
 				return
 			}
 			s.cache.Set(context.Background(), cacheKey, string(data), shelterCacheTTL)
 		}()
 	}
-	return shelters, nil
+	return shelters, total, nil
 }
 
 func (s *ShelterService) GetShelterByID(ctx context.Context, id int) (*models.Shelter, error) {
@@ -137,4 +141,25 @@ func (s *ShelterService) FindNearby(ctx context.Context, params models.NearbyPar
 	}
 
 	return shelters, nil
+}
+
+func (s *ShelterService) UpdateShelter(ctx context.Context, id int, input models.UpdateShelterInput) (*models.Shelter, error) {
+	shelter, err := s.repo.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		specificKey := fmt.Sprintf("shelters:id:%d", id)
+		if err := s.cache.Delete(ctx, specificKey); err != nil {
+			slog.Error("failed to invalidate shelter cache", "shelter_id", id, "error", err)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "shelters:all"); err != nil {
+			slog.Error("failed to invalidate shelters cache", "error", err)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "shelters:nearby:*"); err != nil {
+			slog.Error("failed to invalidate nearby shelters cache", "error", err)
+		}
+	}
+	return shelter, nil
 }

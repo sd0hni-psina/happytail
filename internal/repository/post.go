@@ -18,53 +18,47 @@ func NewPostRepository(pool *pgxpool.Pool) *PostRepository {
 	return &PostRepository{pool: pool}
 }
 
-func (r *PostRepository) GetAll(ctx context.Context) ([]models.Post, error) {
-	query := `
-        SELECT
-            id,
-            user_id,
-            animal_id,
-            listing_type,
-            price_amount,
-            price_currency,
-            reason,
-            photo_urls,
-            contact_info,
-            status,
-            created_at,
-            updated_at
-        FROM posts
-        ORDER BY created_at DESC
-    `
-	rows, err := r.pool.Query(ctx, query)
+func (r *PostRepository) GetAll(ctx context.Context, limit, offset int) ([]models.Post, int, error) {
+	var total int
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM posts`).Scan(&total)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	query := `
+		SELECT id, user_id, animal_id, listing_type,
+			price_amount, price_currency, reason,
+			photo_urls, contact_info, status, created_at, updated_at
+		FROM posts
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	`
+	rows, err := r.pool.Query(ctx, query, limit, offset)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	var posts []models.Post
-
 	for rows.Next() {
 		var p models.Post
 		var amount *int64
 		var currency *string
 		var reason *string
 
-		err := rows.Scan(&p.ID, &p.UserID, &p.AnimalID, &p.ListingType, &amount, &currency, &reason, &p.PhotoURLs, &p.ContactInfo, &p.Status, &p.CreatedAt, &p.UpdatedAt)
+		err := rows.Scan(&p.ID, &p.UserID, &p.AnimalID, &p.ListingType,
+			&amount, &currency, &reason,
+			&p.PhotoURLs, &p.ContactInfo, &p.Status, &p.CreatedAt, &p.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		if amount != nil && currency != nil {
-			p.Price = &models.Money{
-				Amount:   *amount,
-				Currency: *currency,
-			}
+			p.Price = &models.Money{Amount: *amount, Currency: *currency}
 		}
 		p.Reason = reason
-
 		posts = append(posts, p)
 	}
-	return posts, rows.Err()
+	return posts, total, rows.Err()
 }
 
 func (r *PostRepository) GetByID(ctx context.Context, id int) (*models.Post, error) {

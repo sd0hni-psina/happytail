@@ -124,7 +124,7 @@ func main() {
 	roleHandler := handler.NewRoleHandler(roleSvc)
 	requireShelterAdminForAnimal := middleware.RequireShelterAdminForAnimal(roleRepo, animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
-	shelterHandler := handler.NewShelterHandler(shelterSvc)
+	shelterHandler := handler.NewShelterHandler(shelterSvc, animalSvc)
 	userHandler := handler.NewUserHandler(userSvc)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	postHandler := handler.NewPostHandler(postSvc)
@@ -143,6 +143,8 @@ func main() {
 	mux.HandleFunc("GET /shelters", shelterHandler.GetAllShelters)
 	mux.HandleFunc("GET /shelters/{id}", shelterHandler.GetShelterByID)
 	mux.Handle("POST /shelters", authMiddleware(http.HandlerFunc(shelterHandler.CreateShelter)))
+	mux.Handle("PATCH /shelters/{id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(shelterHandler.UpdateShelter))))
+	mux.HandleFunc("GET /shelters/{id}/animals", shelterHandler.GetShelterAnimals)
 	// USERS HANDLERS
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetUserByID)

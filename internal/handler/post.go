@@ -27,13 +27,15 @@ func NewPostHandler(svc PostService) *PostHandler {
 // @Failure 500 {string} string "Failed to fetch posts"
 // @Router /posts [get]
 func (h *PostHandler) GetAllPost(w http.ResponseWriter, r *http.Request) {
-	posts, err := h.svc.GetAllPost(r.Context())
+	params := models.ParsePagination(r)
+
+	posts, total, err := h.svc.GetAllPost(r.Context(), params)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(models.NewPaginatedResponse(posts, total, params))
 }
 
 // GetPostByID godoc

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/sd0hni-psina/happytail/internal/middleware"
 	"github.com/sd0hni-psina/happytail/internal/models"
@@ -204,13 +205,15 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 // @Success 204
 // @Router /auth/logout [post]
 func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	accessToken := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+
 	var input models.RefreshInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.svc.Logout(r.Context(), input.RefreshToken); err != nil {
+	if err := h.svc.Logout(r.Context(), accessToken, input.RefreshToken); err != nil {
 		http.Error(w, "Failed to logout", http.StatusInternalServerError)
 		return
 	}

@@ -7,14 +7,15 @@ import (
 )
 
 type Shelter struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Address   string    `json:"address"`
-	Email     *string   `json:"email"`
-	Phone     *string   `json:"phone_number"`
-	Latitude  *float64  `json:"latitude"`
-	Longitude *float64  `json:"longitude"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int        `json:"id"`
+	Name      string     `json:"name"`
+	Address   string     `json:"address"`
+	Email     *string    `json:"email"`
+	Phone     *string    `json:"phone_number"`
+	Latitude  *float64   `json:"latitude"`
+	Longitude *float64   `json:"longitude"`
+	CreatedAt time.Time  `json:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 type CreateShelterInput struct {
@@ -33,6 +34,17 @@ type UpdateShelterInput struct {
 	Phone     *string  `json:"phone_number"`
 	Latitude  *float64 `json:"latitude"`
 	Longitude *float64 `json:"longitude"`
+}
+
+type ShelterWithDistance struct {
+	Shelter
+	Distance float64 `json:"distance_km"`
+}
+
+type NearbyParams struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	RadiusKm  float64 `json:"radius_km"`
 }
 
 func (usi UpdateShelterInput) Validate() error {
@@ -61,15 +73,18 @@ func (usi UpdateShelterInput) Validate() error {
 	return nil
 }
 
-type ShelterWithDistance struct {
-	Shelter
-	Distance float64 `json:"distance_km"`
-}
-
-type NearbyParams struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	RadiusKm  float64 `json:"radius_km"`
+func (p NearbyParams) Validate() error {
+	var errs []string
+	if p.Latitude < -90 || p.Latitude > 90 {
+		errs = append(errs, "latitude must be between -90 and 90")
+	}
+	if p.Longitude < -180 || p.Longitude > 180 {
+		errs = append(errs, "longitude must be between -180 and 180")
+	}
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+	return nil
 }
 
 func (csi CreateShelterInput) Validate() error {

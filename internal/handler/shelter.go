@@ -157,6 +157,11 @@ func (h *ShelterHandler) FindNearby(w http.ResponseWriter, r *http.Request) {
 		RadiusKm:  radius,
 	}
 
+	if err := params.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	shelters, err := h.svc.FindNearby(r.Context(), params)
 	if err != nil {
 		slog.Error("failed to find nearby shelters", "error", err)
@@ -260,4 +265,32 @@ func (h *ShelterHandler) GetShelterAnimals(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(models.NewPaginatedResponse(animals, total, pagination))
+}
+
+// DeleteShelter godoc
+// @Summary Удалить приют
+// @Description Удаляет приют по ID (soft delete)
+// @Tags shelters
+// @Param id path int true "ID приюта"
+// @Success 204 "Успешно удалено"
+// @Failure 400 {string} string "Invalid shelter ID"
+// @Failure 404 {string} string "Shelter not found"
+// @Failure 500 {string} string "Failed to delete shelter"
+// @Router /shelters/{id} [delete]
+func (h *ShelterHandler) DeleteShelter(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid shelter ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.DeleteShelter(r.Context(), id); err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Shelter not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to delete shelter", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

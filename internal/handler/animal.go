@@ -101,6 +101,19 @@ func (h *AnimalHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 
 // Любой авторизованный пользователь может добавить животное (для приюта, которого он не является администратором). Администратор приюта может редактировать и удалять животных своего приюта.
 
+// UpdateAnimal godoc
+// @Summary Update animal
+// @Description Update existing animal by ID
+// @Tags animals
+// @Accept json
+// @Produce json
+// @Param id path int true "Animal ID"
+// @Param input body models.UpdateAnimalInput true "Update animal input"
+// @Success 200 {object} models.Animal
+// @Failure 400 {string} string "Invalid input or invalid ID"
+// @Failure 404 {string} string "Animal not found"
+// @Failure 500 {string} string "Internal server error"
+// @Router /animals/{id} [put]
 func (h *AnimalHandler) UpdateAnimal(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
@@ -129,4 +142,32 @@ func (h *AnimalHandler) UpdateAnimal(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(animal)
+}
+
+// DeleteAnimal godoc
+// @Summary Удалить животное
+// @Description Удаляет животное по ID (soft delete)
+// @Tags animals
+// @Param id path int true "ID животного"
+// @Success 204 "Успешно удалено"
+// @Failure 400 {string} string "invalid animal ID"
+// @Failure 404 {string} string "Animal not found"
+// @Failure 500 {string} string "Failed to delete animal"
+// @Router /animals/{id} [delete]
+func (h *AnimalHandler) DeleteAnimal(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid animal ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.DeleteAnimal(r.Context(), id); err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Animal not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to delete animal", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -11,13 +11,16 @@ type AnimalService interface {
 	GetAllAnimals(ctx context.Context, params models.PaginationParams, filter models.FilterParams) ([]models.Animal, int, error)
 	GetAnimalByID(ctx context.Context, id int) (*models.Animal, error)
 	UpdateAnimal(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error)
+	DeleteAnimal(ctx context.Context, id int) error
 	CreateAnimal(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 }
 
 type ShelterService interface {
-	GetAllShelters(ctx context.Context) ([]models.Shelter, error)
+	GetAllShelters(ctx context.Context, params models.PaginationParams) ([]models.Shelter, int, error)
 	GetShelterByID(ctx context.Context, id int) (*models.Shelter, error)
 	CreateShelter(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error)
+	UpdateShelter(ctx context.Context, id int, input models.UpdateShelterInput) (*models.Shelter, error)
+	DeleteShelter(ctx context.Context, id int) error
 	FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error)
 }
 
@@ -27,7 +30,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, input models.CreateUserInput) (*models.User, error)
 	Login(ctx context.Context, email, password string) (*models.AuthResponse, error)
 	Refresh(ctx context.Context, refreshToken string) (*models.AuthResponse, error)
-	Logout(ctx context.Context, refreshToken string) error
+	Logout(ctx context.Context, accessToken, refreshToken string) error
 }
 
 type AdoptionService interface {
@@ -36,8 +39,9 @@ type AdoptionService interface {
 }
 
 type PostService interface {
-	GetAllPost(ctx context.Context) ([]models.Post, error)
+	GetAllPost(ctx context.Context, params models.PaginationParams) ([]models.Post, int, error)
 	GetPostByID(ctx context.Context, id int) (*models.Post, error)
+	UpdateStatus(ctx context.Context, postID, requestingUserID int, newStatus models.PostStatus) error
 	CreatePost(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }
 

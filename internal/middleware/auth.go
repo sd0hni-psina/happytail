@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sd0hni-psina/happytail/internal/cache"
 )
 
 type contextKey string
@@ -18,7 +19,7 @@ func GetUserID(ctx context.Context) (int, bool) {
 	return userID, ok
 }
 
-func Auth(secret string) func(next http.Handler) http.Handler {
+func Auth(secret string, cache *cache.Cache) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -43,6 +44,14 @@ func Auth(secret string) func(next http.Handler) http.Handler {
 			if err != nil || !token.Valid {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
+			}
+			blacklistKey := "blacklist:access:" + tokenString
+			if cache != nil {
+				exists, err := cache.Exists(r.Context(), blacklistKey)
+				if err == nil && exists {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 			}
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {

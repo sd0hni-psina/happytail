@@ -14,12 +14,13 @@ import (
 const postCacheTTL = 10 * time.Minute
 
 type PostService struct {
-	repo  PostRepository
-	cache *cache.Cache
+	repo     PostRepository
+	roleRepo RoleRepository
+	cache    *cache.Cache
 }
 
-func NewPostService(repo PostRepository, cache *cache.Cache) *PostService {
-	return &PostService{repo: repo, cache: cache}
+func NewPostService(repo PostRepository, roleRepo RoleRepository, cache *cache.Cache) *PostService {
+	return &PostService{repo: repo, roleRepo: roleRepo, cache: cache}
 }
 
 func (s *PostService) GetAllPost(ctx context.Context, params models.PaginationParams) ([]models.Post, int, error) {
@@ -98,4 +99,39 @@ func (s *PostService) CreatePost(ctx context.Context, input models.CreatePostInp
 		}
 	}
 	return post, nil
+}
+
+func (s *PostService) UpdateStatus(ctx context.Context, postID, requestingUserID int, newStatus models.PostStatus) error {
+	post, err := s.repo.GetByID(ctx, postID)
+	if err != nil {
+		return err
+	}
+
+	isAdmin, err := s.roleRepo.HasRole(ctx, requestingUserID, models.RoleAdmin, nil)
+	if err != nil {
+		return err
+	}
+
+	if !isAdmin {
+		if post.UserID != requestingUserID {
+			return models.ErrForbidden
+		}
+		if newStatus == models.PostStatusDeleted {
+			return models.ErrForbidden
+		}
+	}
+
+	if err := s.repo.UpdateStatus(ctx, postID, newStatus); err != nil {
+		return err
+	}
+
+	if s.cache != nil {
+		if err := s.cache.Delete(ctx, fmt.Sprintf("posts:id:%d", postID)); err != nil {
+			slog.Error("failed to invalidate post cache", "error", err)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "posts:page=*"); err != nil {
+			slog.Error("failed to invalidate posts cache", "error", err)
+		}
+	}
+	return nil
 }

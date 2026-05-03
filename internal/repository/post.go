@@ -173,3 +173,17 @@ func (r *PostRepository) Create(ctx context.Context, input models.CreatePostInpu
 
 	return post, nil
 }
+
+func (r *PostRepository) UpdateStatus(ctx context.Context, postID int, status models.PostStatus) error {
+	query := `UPDATE posts SET status = $1, updated_at = NOW() WHERE id = $2`
+	result, err := r.pool.Exec(ctx, query, status, postID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
+
+}

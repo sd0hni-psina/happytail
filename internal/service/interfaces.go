@@ -13,14 +13,16 @@ type AnimalRepository interface {
 	GetByID(ctx context.Context, id int) (*models.Animal, error)
 	Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 	Update(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error)
+	Delete(ctx context.Context, id int) error
 	GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error)
 }
 
 type ShelterRepository interface {
-	GetAll(ctx context.Context, limit, offset int, filter models.FilterParams) ([]models.Shelter, int, error)
+	GetAll(ctx context.Context, limit, offset int) ([]models.Shelter, int, error)
 	GetByID(ctx context.Context, id int) (*models.Shelter, error)
 	Create(ctx context.Context, input models.CreateShelterInput) (*models.Shelter, error)
 	FindNearby(ctx context.Context, params models.NearbyParams) ([]models.ShelterWithDistance, error)
+	Delete(ctx context.Context, id int) error
 	Update(ctx context.Context, id int, input models.UpdateShelterInput) (*models.Shelter, error)
 }
 
@@ -37,8 +39,9 @@ type AdoptionRepository interface {
 }
 
 type PostRepository interface {
-	GetAll(ctx context.Context) ([]models.Post, error)
+	GetAll(ctx context.Context, limit, offset int) ([]models.Post, int, error)
 	GetByID(ctx context.Context, id int) (*models.Post, error)
+	UpdateStatus(ctx context.Context, postID int, status models.PostStatus) error
 	Create(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }
 

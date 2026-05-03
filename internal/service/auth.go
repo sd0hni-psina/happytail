@@ -99,6 +99,42 @@ func (s *UserService) Refresh(ctx context.Context, refreshToken string) (*models
 	}, nil
 }
 
-func (s *UserService) Logout(ctx context.Context, refreshToken string) error {
-	return s.tokenRepo.Revoke(ctx, refreshToken)
+func (s *UserService) Logout(ctx context.Context, accessToken, refreshToken string) error {
+	if err := s.tokenRepo.Revoke(ctx, refreshToken); err != nil {
+		return fmt.Errorf("failed to revoke refresh token: %w", err)
+	}
+
+	token, _, err := new(jwt.Parser).ParseUnverified(accessToken, jwt.MapClaims{})
+	if err != nil {
+		return nil
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil
+	}
+
+	expRaw, ok := claims["exp"]
+	if !ok {
+		return nil
+	}
+	expFloat, ok := expRaw.(float64)
+	if !ok {
+		return nil
+	}
+
+	expTime := time.Unix(int64(expFloat), 0)
+	ttl := time.Until(expTime)
+	if ttl <= 0 {
+		return nil
+	}
+
+	blacklistKey := "blacklist:access:" + accessToken
+	if s.cache != nil {
+		if err := s.cache.Set(ctx, blacklistKey, "1", ttl); err != nil {
+			return nil
+		}
+	}
+
+	return nil
 }

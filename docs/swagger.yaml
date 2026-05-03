@@ -130,6 +130,10 @@ definitions:
         type: string
       email:
         type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
       name:
         type: string
       phone_number:
@@ -169,6 +173,26 @@ definitions:
         type: integer
       currency:
         type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.PaginatedResponse-github_com_sd0hni-psina_happytail_internal_models_Animal:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Animal'
+        type: array
+      meta:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.PaginationMeta'
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.PaginationMeta:
+    properties:
+      current_page:
+        type: integer
+      limit:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
     type: object
   github_com_sd0hni-psina_happytail_internal_models.Post:
     properties:
@@ -246,10 +270,78 @@ definitions:
         type: string
       created_at:
         type: string
+      deleted_at:
+        type: string
       email:
         type: string
       id:
         type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.ShelterWithDistance:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      distance_km:
+        type: number
+      email:
+        type: string
+      id:
+        type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.UpdateAnimalInput:
+    properties:
+      age:
+        type: integer
+      breed:
+        type: string
+      color:
+        type: string
+      description:
+        type: string
+      has_vet_passport:
+        type: boolean
+      is_vaccinated:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.UpdatePostStatusInput:
+    properties:
+      status:
+        $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.PostStatus'
+    type: object
+  github_com_sd0hni-psina_happytail_internal_models.UpdateShelterInput:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
       name:
         type: string
       phone_number:
@@ -368,6 +460,32 @@ paths:
       tags:
       - animals
   /animals/{id}:
+    delete:
+      description: Удаляет животное по ID (soft delete)
+      parameters:
+      - description: ID животного
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+        "400":
+          description: invalid animal ID
+          schema:
+            type: string
+        "404":
+          description: Animal not found
+          schema:
+            type: string
+        "500":
+          description: Failed to delete animal
+          schema:
+            type: string
+      summary: Удалить животное
+      tags:
+      - animals
     get:
       consumes:
       - application/json
@@ -391,6 +509,44 @@ paths:
               type: string
             type: object
       summary: Получить животное по ID
+      tags:
+      - animals
+    put:
+      consumes:
+      - application/json
+      description: Update existing animal by ID
+      parameters:
+      - description: Animal ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update animal input
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.UpdateAnimalInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Animal'
+        "400":
+          description: Invalid input or invalid ID
+          schema:
+            type: string
+        "404":
+          description: Animal not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Update animal
       tags:
       - animals
   /animals/{id}/photos:
@@ -682,6 +838,48 @@ paths:
       summary: Получить пост по ID
       tags:
       - Post
+  /posts/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID поста
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: новый статус
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.UpdatePostStatusInput'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить статус поста
+      tags:
+      - posts
   /roles:
     post:
       consumes:
@@ -790,6 +988,32 @@ paths:
       tags:
       - shelters
   /shelters/{id}:
+    delete:
+      description: Удаляет приют по ID (soft delete)
+      parameters:
+      - description: ID приюта
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+        "400":
+          description: Invalid shelter ID
+          schema:
+            type: string
+        "404":
+          description: Shelter not found
+          schema:
+            type: string
+        "500":
+          description: Failed to delete shelter
+          schema:
+            type: string
+      summary: Удалить приют
+      tags:
+      - shelters
     get:
       consumes:
       - application/json
@@ -813,6 +1037,126 @@ paths:
               type: string
             type: object
       summary: Получить приют по ID
+      tags:
+      - shelters
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID приюта
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: поля для обновления
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.UpdateShelterInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Shelter'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить данные приюта
+      tags:
+      - shelters
+  /shelters/{id}/animals:
+    get:
+      parameters:
+      - description: ID приюта
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Страница
+        in: query
+        name: page
+        type: integer
+      - description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - description: Фильтр по статусу
+        in: query
+        name: status
+        type: string
+      - description: Фильтр по типу
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.PaginatedResponse-github_com_sd0hni-psina_happytail_internal_models_Animal'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить животных приюта
+      tags:
+      - shelters
+  /shelters/nearby:
+    get:
+      parameters:
+      - description: Широта
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Долгота
+        in: query
+        name: lon
+        required: true
+        type: number
+      - description: 'Радиус поиска в км (default: 10, max: 500)'
+        in: query
+        name: radius
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.ShelterWithDistance'
+            type: array
+      summary: Найти ближайшие приюты
       tags:
       - shelters
   /users:
@@ -883,6 +1227,40 @@ paths:
       summary: Получить пользователя по ID
       tags:
       - users
+  /users/{id}/adoptions:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_sd0hni-psina_happytail_internal_models.Adoption'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: История усыновлений пользователя
+      tags:
+      - adoptions
   /users/me:
     get:
       produces:

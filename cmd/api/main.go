@@ -101,7 +101,7 @@ func main() {
 	defer pool.Close()
 	defer redisCache.Close()
 
-	authMiddleware := middleware.Auth(cfg.JWTSecret)
+	authMiddleware := middleware.Auth(cfg.JWTSecret, redisCache)
 
 	// REPOSITORIES
 	roleRepo := repository.NewRoleRepository(pool)
@@ -115,26 +115,29 @@ func main() {
 	// SERVICES
 	animalSvc := service.NewAnimalService(animalRepo, redisCache)
 	roleSvc := service.NewRoleService(roleRepo)
-	userSvc := service.NewUserService(userRepo, tokenRepo, cfg.JWTSecret)
+	userSvc := service.NewUserService(userRepo, tokenRepo, cfg.JWTSecret, redisCache)
 	adoptionSvc := service.NewAdoptionService(adoptionRepo, userRepo, animalRepo, emailNotifier, redisCache)
 	shelterSvc := service.NewShelterService(shelterRepo, redisCache)
-	postSvc := service.NewPostService(postRepo, redisCache)
+	postSvc := service.NewPostService(postRepo, roleRepo, redisCache)
 	photoSvc := service.NewAnimalPhotoService(photoRepo, minioStorage, redisCache)
 	// HANDLERS
 	roleHandler := handler.NewRoleHandler(roleSvc)
-	requireShelterAdminForAnimal := middleware.RequireShelterAdminForAnimal(roleRepo, animalRepo)
 	animalHandler := handler.NewAnimalHandler(animalSvc)
 	shelterHandler := handler.NewShelterHandler(shelterSvc, animalSvc)
 	userHandler := handler.NewUserHandler(userSvc)
 	adoptionHandler := handler.NewAdoptionHandler(adoptionSvc)
 	postHandler := handler.NewPostHandler(postSvc)
 	photoHandler := handler.NewAnimalPhotoHandler(photoSvc)
+	//
+	requireShelterAdminForAnimal := middleware.RequireShelterAdminForAnimal(roleRepo, animalRepo)
+	requireShelterAdmin := middleware.RequireShelterAdmin(roleRepo)
 
 	// ANIMALS HANDLERS
 	mux.HandleFunc("GET /animals", animalHandler.GetAllAnimals)
 	mux.HandleFunc("GET /animals/{id}", animalHandler.GetAnimalByID)
 	mux.Handle("POST /animals", authMiddleware(http.HandlerFunc(animalHandler.CreateAnimal)))
 	mux.Handle("PATCH /animals/{id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(animalHandler.UpdateAnimal))))
+	mux.Handle("DELETE /animals/{id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(animalHandler.DeleteAnimal))))
 	// ROLE HANDLERS
 	mux.Handle("POST /roles", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.AppointRole))))
 	mux.Handle("DELETE /roles/{id}", authMiddleware(middleware.RequireRole(models.RoleAdmin, roleRepo)(http.HandlerFunc(roleHandler.RemoveRole))))
@@ -145,6 +148,7 @@ func main() {
 	mux.Handle("POST /shelters", authMiddleware(http.HandlerFunc(shelterHandler.CreateShelter)))
 	mux.Handle("PATCH /shelters/{id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(shelterHandler.UpdateShelter))))
 	mux.HandleFunc("GET /shelters/{id}/animals", shelterHandler.GetShelterAnimals)
+	mux.Handle("DELETE /shelters/{id}", authMiddleware(requireShelterAdmin(http.HandlerFunc(shelterHandler.DeleteShelter))))
 	// USERS HANDLERS
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /users/{id}", userHandler.GetUserByID)
@@ -160,6 +164,7 @@ func main() {
 	mux.HandleFunc("GET /posts", postHandler.GetAllPost)
 	mux.HandleFunc("GET /posts/{id}", postHandler.GetPostByID)
 	mux.Handle("POST /posts", authMiddleware(http.HandlerFunc(postHandler.CreatePost)))
+	mux.Handle("PATCH /posts/{id}/status", authMiddleware(http.HandlerFunc(postHandler.UpdatePostStatus)))
 	// PHOTOS HANDLERS
 	mux.Handle("POST /animals/{id}/photos", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(photoHandler.AddPhoto))))
 	mux.Handle("DELETE /animals/{id}/photos/{photo_id}", authMiddleware(requireShelterAdminForAnimal(http.HandlerFunc(photoHandler.DeletePhoto))))

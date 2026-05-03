@@ -30,6 +30,7 @@ func (r *ShelterRepository) GetAll(ctx context.Context, limit, offset int) ([]mo
 	query := `
 		SELECT id, name, address, email, phone_number, latitude, longitude, created_at
 		FROM shelters
+		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`
@@ -53,7 +54,7 @@ func (r *ShelterRepository) GetAll(ctx context.Context, limit, offset int) ([]mo
 
 func (r *ShelterRepository) GetByID(ctx context.Context, id int) (*models.Shelter, error) {
 	query := `SELECT id, name, address, email, phone_number, latitude, longitude, created_at 
-	          FROM shelters WHERE id = $1`
+	          FROM shelters WHERE id = $1 AND deleted_at IS NULL`
 
 	var s models.Shelter
 	err := r.pool.QueryRow(ctx, query, id).Scan(
@@ -192,4 +193,16 @@ func (r *ShelterRepository) Update(ctx context.Context, id int, input models.Upd
 		return nil, err
 	}
 	return &s, nil
+}
+
+func (r *ShelterRepository) Delete(ctx context.Context, id int) error {
+	query := `UPDATE shelters SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`
+	result, err := r.pool.Exec(ctx, query, id)
+	if err != nil {
+		return nil
+	}
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
 }

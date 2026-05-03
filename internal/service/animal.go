@@ -20,6 +20,13 @@ func strVal(s *string) string {
 	return *s
 }
 
+func shelterIDVal(id *int) int {
+	if id == nil {
+		return 0
+	}
+	return *id
+}
+
 type AnimalService struct {
 	repo  AnimalRepository
 	cache *cache.Cache
@@ -30,11 +37,14 @@ func NewAnimalService(repo AnimalRepository, cache *cache.Cache) *AnimalService 
 }
 
 func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.PaginationParams, filter models.FilterParams) ([]models.Animal, int, error) {
-	cacheKey := fmt.Sprintf("animals:page=%d:limit=%d:type=%s:status=%s:breed=%s",
+	// Name добавлен в cache key — поиск "барсик" и поиск "мурзик" кэшируются отдельно
+	cacheKey := fmt.Sprintf("animals:page=%d:limit=%d:name=%s:type=%s:status=%s:breed=%s:shelter=%d",
 		params.Page, params.Limit,
+		strVal(filter.Name),
 		strVal(filter.Type),
 		strVal(filter.Status),
 		strVal(filter.Breed),
+		shelterIDVal(filter.ShelterID),
 	)
 
 	type cacheResult struct {
@@ -43,8 +53,7 @@ func (s *AnimalService) GetAllAnimals(ctx context.Context, params models.Paginat
 	}
 
 	if s.cache != nil {
-		cached, err := s.cache.Get(ctx, cacheKey)
-		if err == nil {
+		if cached, err := s.cache.Get(ctx, cacheKey); err == nil {
 			var result cacheResult
 			if err := json.Unmarshal([]byte(cached), &result); err == nil {
 				return result.Animals, result.Total, nil
@@ -133,4 +142,19 @@ func (s *AnimalService) UpdateAnimal(ctx context.Context, id int, input models.U
 		}
 	}
 	return animal, nil
+}
+
+func (s *AnimalService) DeleteAnimal(ctx context.Context, id int) error {
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return nil
+	}
+	if s.cache != nil {
+		if err := s.cache.Delete(ctx, fmt.Sprintf("animals:id:%d", id)); err != nil {
+			slog.Error("failed to invalidate animal cache", "error", err)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "animals:page=*"); err != nil {
+			slog.Error("failed to invalidate animals list cache", "error", err)
+		}
+	}
+	return nil
 }

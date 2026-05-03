@@ -62,6 +62,19 @@ type CreatePostInput struct {
 	ContactInfo string      `json:"contact_info"`
 }
 
+type UpdatePostStatusInput struct {
+	Status PostStatus `json:"status"`
+}
+
+func (upsi UpdatePostStatusInput) Validate() error {
+	switch upsi.Status {
+	case PostStatusActive, PostStatusInactive, PostStatusDeleted:
+		return nil
+	default:
+		return fmt.Errorf("invalid status: %s, must be one of: active, inactive, deleted", upsi.Status)
+	}
+}
+
 func (cpi *CreatePostInput) Validate() error {
 	cpi.ListingType = cpi.ListingType.Normalize()
 	validationErrors := make(map[string]string)

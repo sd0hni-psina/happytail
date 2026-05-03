@@ -6,6 +6,7 @@ import (
 )
 
 type FilterParams struct {
+	Name           *string `json:"name"`
 	Type           *string `json:"type"`
 	Breed          *string `json:"breed"`
 	Color          *string `json:"color"`
@@ -17,6 +18,11 @@ type FilterParams struct {
 
 func ParseFilter(r *http.Request) FilterParams {
 	params := FilterParams{}
+	if v := r.URL.Query().Get("name"); v != "" {
+		wrapped := "%" + v + "%"
+		params.Name = &wrapped
+	}
+
 	animalType := r.URL.Query().Get("type")
 	if animalType != "" {
 		params.Type = &animalType
@@ -40,6 +46,10 @@ func ParseFilter(r *http.Request) FilterParams {
 	status := r.URL.Query().Get("status")
 	if status != "" {
 		params.Status = &status
+	}
+	shelterID, err := strconv.Atoi(r.URL.Query().Get("shelter_id"))
+	if err == nil {
+		params.ShelterID = &shelterID
 	}
 	return params
 }

@@ -114,3 +114,54 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(post)
 }
+
+// UpdatePostStatus godoc
+// @Summary Обновить статус поста
+// @Tags posts
+// @Security ApiKeyAuth
+// @Accept json
+// @Param id path int true "ID поста"
+// @Param input body models.UpdatePostStatusInput true "новый статус"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /posts/{id}/status [patch]
+func (h *PostHandler) UpdatePostStatus(w http.ResponseWriter, r *http.Request) {
+	postID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var input models.UpdatePostStatusInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+	if err := input.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.UpdateStatus(r.Context(), postID, userID, input.Status); err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, models.ErrForbidden) {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		http.Error(w, "Failed to update post status", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

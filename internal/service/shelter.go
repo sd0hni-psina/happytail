@@ -163,3 +163,21 @@ func (s *ShelterService) UpdateShelter(ctx context.Context, id int, input models
 	}
 	return shelter, nil
 }
+
+func (s *ShelterService) DeleteShelter(ctx context.Context, id int) error {
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	if s.cache != nil {
+		if err := s.cache.Delete(ctx, fmt.Sprintf("shelters:id:%d", id)); err != nil {
+			slog.Error("failed to invalidate shelter cache", "error", err)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "shelters:page=*"); err != nil {
+			slog.Error("failed to invalidate shelters list cache", "error", err)
+		}
+		if err := s.cache.DeleteByPattern(ctx, "shelters:nearby:*"); err != nil {
+			slog.Error("failed to invalidate nearby cache", "error", err)
+		}
+	}
+	return nil
+}

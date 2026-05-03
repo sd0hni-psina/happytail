@@ -41,6 +41,14 @@ func (c *Cache) Delete(ctx context.Context, keys ...string) error {
 	return c.client.Del(ctx, keys...).Err()
 }
 
+func (c *Cache) Exists(ctx context.Context, key string) (bool, error) {
+	n, err := c.client.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
 func (c *Cache) DeleteByPattern(ctx context.Context, pattern string) error {
 	var cursor uint64
 	for {

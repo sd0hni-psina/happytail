@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/sd0hni-psina/happytail/internal/cache"
 	"github.com/sd0hni-psina/happytail/internal/models"
 )
 
@@ -10,10 +11,11 @@ type UserService struct {
 	repo      UserRepository
 	tokenRepo RefreshTokenRepository
 	jwtSecret string
+	cache     *cache.Cache
 }
 
-func NewUserService(repo UserRepository, tokenRepo RefreshTokenRepository, jwtSecret string) *UserService {
-	return &UserService{repo: repo, tokenRepo: tokenRepo, jwtSecret: jwtSecret}
+func NewUserService(repo UserRepository, tokenRepo RefreshTokenRepository, jwtSecret string, cache *cache.Cache) *UserService {
+	return &UserService{repo: repo, tokenRepo: tokenRepo, jwtSecret: jwtSecret, cache: cache}
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context) ([]models.UserPublic, error) {

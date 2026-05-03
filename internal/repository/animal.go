@@ -23,38 +23,40 @@ func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int, filter
 	conditions := []string{}
 	args := []any{}
 
+	if filter.Name != nil {
+		args = append(args, *filter.Name)
+		conditions = append(conditions, fmt.Sprintf("name ILIKE $%d", len(args)))
+	}
 	if filter.Type != nil {
-		conditions = append(conditions, fmt.Sprintf("animal_type = $%d", len(args)+1))
 		args = append(args, *filter.Type)
+		conditions = append(conditions, fmt.Sprintf("animal_type = $%d", len(args)))
 	}
-
 	if filter.Breed != nil {
-		conditions = append(conditions, fmt.Sprintf("breed = $%d", len(args)+1))
 		args = append(args, *filter.Breed)
+		conditions = append(conditions, fmt.Sprintf("breed = $%d", len(args)))
 	}
-
 	if filter.Color != nil {
-		conditions = append(conditions, fmt.Sprintf("color = $%d", len(args)+1))
 		args = append(args, *filter.Color)
+		conditions = append(conditions, fmt.Sprintf("color = $%d", len(args)))
 	}
-
 	if filter.IsVaccinated != nil {
-		conditions = append(conditions, fmt.Sprintf("is_vaccinated = $%d", len(args)+1))
 		args = append(args, *filter.IsVaccinated)
+		conditions = append(conditions, fmt.Sprintf("is_vaccinated = $%d", len(args)))
 	}
-
 	if filter.HasVetPassport != nil {
-		conditions = append(conditions, fmt.Sprintf("has_vet_passport = $%d", len(args)+1))
 		args = append(args, *filter.HasVetPassport)
+		conditions = append(conditions, fmt.Sprintf("has_vet_passport = $%d", len(args)))
 	}
-
 	if filter.Status != nil {
-		conditions = append(conditions, fmt.Sprintf("status = $%d", len(args)+1))
 		args = append(args, *filter.Status)
+		conditions = append(conditions, fmt.Sprintf("status = $%d", len(args)))
+	} else {
+		args = append(args, "deleted")
+		conditions = append(conditions, fmt.Sprintf("status != $%d", len(args)))
 	}
 	if filter.ShelterID != nil {
-		conditions = append(conditions, fmt.Sprintf("shelter_id = $%d", len(args)+1))
 		args = append(args, *filter.ShelterID)
+		conditions = append(conditions, fmt.Sprintf("shelter_id = $%d", len(args)))
 	}
 
 	whereClause := ""
@@ -63,28 +65,30 @@ func (r *AnimalRepository) GetAll(ctx context.Context, limit, offset int, filter
 	}
 
 	var total int
-	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM animals "+whereClause, args...).Scan(&total)
-	if err != nil {
+	if err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM animals "+whereClause, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
-	query := `SELECT id, animal_type, name, age, breed, color, 
-       is_vaccinated, has_vet_passport, description, 
-       shelter_id, status, share_count, created_at
-	   FROM animals ` + whereClause + ` ORDER BY created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) + ` OFFSET $` + fmt.Sprint(len(args)+2)
+	query := `SELECT id, animal_type, name, age, breed, color,
+	       is_vaccinated, has_vet_passport, description,
+	       shelter_id, status, share_count, created_at
+		   FROM animals ` + whereClause +
+		` ORDER BY created_at DESC LIMIT $` + fmt.Sprint(len(args)+1) +
+		` OFFSET $` + fmt.Sprint(len(args)+2)
 
 	args = append(args, limit, offset)
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	defer rows.Close()
+
 	var animals []models.Animal
 	for rows.Next() {
 		a := models.Animal{}
-		err := rows.Scan(&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color, &a.IsVaccinated, &a.HasVetPassport, &a.Description, &a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt)
-		if err != nil {
+		if err := rows.Scan(&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color,
+			&a.IsVaccinated, &a.HasVetPassport, &a.Description,
+			&a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt); err != nil {
 			return nil, 0, err
 		}
 		animals = append(animals, a)
@@ -198,4 +202,16 @@ func (r *AnimalRepository) Update(ctx context.Context, id int, input models.Upda
 		return nil, err
 	}
 	return &a, nil
+}
+
+func (r *AnimalRepository) Delete(ctx context.Context, id int) error {
+	query := `UPDATE animals SET status = 'deleted' WHERE id = $1 AND status != 'deleted'`
+	result, err := r.pool.Exec(ctx, query, id)
+	if err != nil {
+		return nil
+	}
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
 }

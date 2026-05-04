@@ -171,3 +171,31 @@ func (h *AnimalHandler) DeleteAnimal(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// ShareAnimal godoc
+// @Summary Поделиться животным
+// @Tags animals
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path int true "ID животного"
+// @Success 200 {object} models.Animal
+// @Failure 404 {object} map[string]string
+// @Router /animals/{id}/share [post]
+func (h *AnimalHandler) ShareAnimal(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid animal ID", http.StatusBadRequest)
+		return
+	}
+	animal, err := h.svc.ShareAnimal(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			http.Error(w, "Animal not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to share animal", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(animal)
+}

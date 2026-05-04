@@ -158,3 +158,16 @@ func (s *AnimalService) DeleteAnimal(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func (s *AnimalService) ShareAnimal(ctx context.Context, id int) (*models.Animal, error) {
+	animal, err := s.repo.IncrementShareCount(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if s.cache != nil {
+		if err := s.cache.Delete(ctx, fmt.Sprintf("animals:id:%d", id)); err != nil {
+			slog.Error("failed to invalidate animal cache after share", "error", err)
+		}
+	}
+	return animal, nil
+}

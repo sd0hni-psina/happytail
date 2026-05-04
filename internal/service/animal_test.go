@@ -33,6 +33,14 @@ func (m *mockAnimalRepo) Update(ctx context.Context, id int, input models.Update
 	return m.animal, m.err
 }
 
+func (m *mockAnimalRepo) Delete(ctx context.Context, id int) error {
+	return nil
+}
+
+func (m *mockAnimalRepo) IncrementShareCount(ctx context.Context, id int) (*models.Animal, error) {
+	return m.animal, nil
+}
+
 func TestGetAnimalByID_NotFound(t *testing.T) {
 	repo := &mockAnimalRepo{
 		animal: nil,

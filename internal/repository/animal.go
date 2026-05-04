@@ -215,3 +215,26 @@ func (r *AnimalRepository) Delete(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func (r *AnimalRepository) IncrementShareCount(ctx context.Context, id int) (*models.Animal, error) {
+	query := `
+		UPDATE animals
+		SET share_count = share_count + 1
+		WHERE id = $1 AND status != 'deleted'
+		RETURNING id, animal_type, name, age, breed, color,
+			is_vaccinated, has_vet_passport, description,
+			shelter_id, status, share_count, created_at
+	`
+	a := models.Animal{}
+	err := r.pool.QueryRow(ctx, query, id).Scan(
+		&a.ID, &a.Type, &a.Name, &a.Age, &a.Breed, &a.Color,
+		&a.IsVaccinated, &a.HasVetPassport, &a.Description,
+		&a.ShelterID, &a.Status, &a.ShareCount, &a.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+	return &a, nil
+}

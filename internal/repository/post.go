@@ -187,3 +187,43 @@ func (r *PostRepository) UpdateStatus(ctx context.Context, postID int, status mo
 	return nil
 
 }
+
+func (r *PostRepository) GetByUserID(ctx context.Context, userID, limit, ofset int) ([]models.Post, int, error) {
+	query := `SELECT COUNT(*) FROM posts WHERE user_id = $1 AND status != 'deleted'`
+	var total int
+	if err := r.pool.QueryRow(ctx, query, userID).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	query2 := `SELECT id, user_id, animal_id, listing_type,
+			price_amount, price_currency, reason,
+			photo_urls, contact_info, status, created_at, updated_at
+		FROM posts
+		WHERE user_id = $1 AND status != 'deleted'
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+	rows, err := r.pool.Query(ctx, query2, userID, limit, ofset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var p models.Post
+		var amount *int64
+		var currency, reason *string
+		if err := rows.Scan(&p.ID, &p.UserID, &p.AnimalID, &p.ListingType,
+			&amount, &currency, &reason,
+			&p.PhotoURLs, &p.ContactInfo, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+		if amount != nil && currency != nil {
+			p.Price = &models.Money{Amount: *amount, Currency: *currency}
+		}
+		p.Reason = reason
+		posts = append(posts, p)
+	}
+	return posts, total, rows.Err()
+}

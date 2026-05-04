@@ -165,3 +165,43 @@ func (h *PostHandler) UpdatePostStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// GetUserPosts godoc
+// @Summary Посты пользователя
+// @Tags posts
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path int true "ID пользователя"
+// @Param page query int false "Страница"
+// @Param limit query int false "Лимит"
+// @Success 200 {object} models.PaginatedResponse[models.Post]
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /users/{id}/posts [get]
+func (h *PostHandler) GetUserPosts(w http.ResponseWriter, r *http.Request) {
+	targetID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	requestingUserID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if requestingUserID != targetID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	params := models.ParsePagination(r)
+	posts, total, err := h.svc.GetUserPosts(r.Context(), targetID, params)
+	if err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(models.NewPaginatedResponse(posts, total, params))
+}

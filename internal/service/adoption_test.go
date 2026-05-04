@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/sd0hni-psina/happytail/internal/models"
@@ -44,6 +45,7 @@ func (m *mockNotifier) SendAdoptionConfirmation(toEmail, userName, animalName st
 }
 
 func TestCreateAdoption_Success(t *testing.T) {
+	t.Log("before CreateAdoption")
 	expected := &models.Adoption{ID: 1, UserID: 10, AnimalID: 5}
 
 	svc := NewAdoptionService(
@@ -53,8 +55,9 @@ func TestCreateAdoption_Success(t *testing.T) {
 		&mockNotifier{},
 		nil,
 	)
-
+	fmt.Println("step 1")
 	adoption, err := svc.CreateAdoption(context.Background(), 10, 5)
+	fmt.Println("step 2")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

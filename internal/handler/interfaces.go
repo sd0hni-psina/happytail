@@ -12,6 +12,7 @@ type AnimalService interface {
 	GetAnimalByID(ctx context.Context, id int) (*models.Animal, error)
 	UpdateAnimal(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error)
 	DeleteAnimal(ctx context.Context, id int) error
+	ShareAnimal(ctx context.Context, id int) (*models.Animal, error)
 	CreateAnimal(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 }
 
@@ -42,6 +43,7 @@ type PostService interface {
 	GetAllPost(ctx context.Context, params models.PaginationParams) ([]models.Post, int, error)
 	GetPostByID(ctx context.Context, id int) (*models.Post, error)
 	UpdateStatus(ctx context.Context, postID, requestingUserID int, newStatus models.PostStatus) error
+	GetUserPosts(ctx context.Context, userID int, params models.PaginationParams) ([]models.Post, int, error)
 	CreatePost(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }
 

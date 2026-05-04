@@ -14,6 +14,7 @@ type AnimalRepository interface {
 	Create(ctx context.Context, input models.CreateAnimalInput) (*models.Animal, error)
 	Update(ctx context.Context, id int, input models.UpdateAnimalInput) (*models.Animal, error)
 	Delete(ctx context.Context, id int) error
+	IncrementShareCount(ctx context.Context, id int) (*models.Animal, error)
 	GetShelterIDByAnimalID(ctx context.Context, animalID int) (*int, error)
 }
 
@@ -42,6 +43,7 @@ type PostRepository interface {
 	GetAll(ctx context.Context, limit, offset int) ([]models.Post, int, error)
 	GetByID(ctx context.Context, id int) (*models.Post, error)
 	UpdateStatus(ctx context.Context, postID int, status models.PostStatus) error
+	GetByUserID(ctx context.Context, userID, limit, ofset int) ([]models.Post, int, error)
 	Create(ctx context.Context, input models.CreatePostInput) (*models.Post, error)
 }
 

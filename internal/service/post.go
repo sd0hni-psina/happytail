@@ -135,3 +135,7 @@ func (s *PostService) UpdateStatus(ctx context.Context, postID, requestingUserID
 	}
 	return nil
 }
+
+func (s *PostService) GetUserPosts(ctx context.Context, userID int, params models.PaginationParams) ([]models.Post, int, error) {
+	return s.repo.GetByUserID(ctx, userID, params.Limit, params.Offset())
+}
